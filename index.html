@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMP Student Fee Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            --cs-color: #10b981;
+            --ce-color: #3b82f6;
+            --ec-color: #f59e0b;
+            --me-color: #8b5cf6;
+            --ee-color: #ef4444;
+            
+            --radius: 12px;
+            --radius-lg: 16px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-light: #64748b;
+            --border: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-year {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        /* Loading States */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            margin: 2rem 0;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-container {
+            background: var(--bg-primary);
+            border: 2px solid var(--error);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: var(--error);
+            margin-bottom: 1rem;
+        }
+
+        /* Course Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .metric-card:hover::before {
+            left: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-sublabel {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            position: relative;
+            z-index: 1;
+        }
+
+        .metric-card.cs .metric-number { color: var(--cs-color); }
+        .metric-card.ce .metric-number { color: var(--ce-color); }
+        .metric-card.ec .metric-number { color: var(--ec-color); }
+        .metric-card.me .metric-number { color: var(--me-color); }
+        .metric-card.ee .metric-number { color: var(--ee-color); }
+        .metric-card.all .metric-number { color: var(--primary); }
+
+        /* Navigation */
+        .nav-container {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Course Detail Section */
+        .course-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .course-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Report Tabs */
+        .report-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 0.25rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            gap: 0.25rem;
+        }
+
+        .report-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.5rem 0.75rem;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .report-tab.active {
+            background: var(--bg-primary);
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Filters */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-input, .filter-select {
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-grid {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .table .amount {
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .table .due {
+            font-weight: 600;
+            color: var(--error);
+        }
+
+        .table .status-paid {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .table .status-pending {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .table .status-partial {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.75rem;
+            }
+
+            .header {
+                padding: 1.5rem 0;
+                margin-bottom: 1.5rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+
+            .nav-container {
+                margin-bottom: 1.5rem;
+            }
+
+            .content-section {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .course-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+
+            .btn-grid {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .table th,
+            .table td {
+                padding: 0.5rem 0.25rem;
+                font-size: 0.8rem;
+                max-width: 100px;
+            }
+
+            .theme-toggle {
+                bottom: 1rem;
+                right: 1rem;
+                width: 45px;
+                height: 45px;
+            }
+        }
+
+        /* Animation for loading */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1>SMP Student Management System</h1>
+                <div class="header-subtitle">Academic Year 2025-26</div>
+                <div class="header-year">Real-time Student Analytics & Fee Management</div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-container">
+            <div class="spinner"></div>
+            <h3>Loading Student Database...</h3>
+            <p>Please wait while we process the data</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-container hidden">
+            <div class="error-icon">⚠️</div>
+            <h3>Failed to Load Data</h3>
+            <p id="errorMessage">Could not load students.csv file</p>
+            <div class="mt-2">
+                <button class="btn btn-primary" onclick="retryLoad()">🔄 Retry</button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden fade-in">
+            <!-- Course Metrics -->
+            <div class="metrics-grid" id="metricsGrid">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Navigation -->
+            <div class="nav-container">
+                <button class="nav-tab active" onclick="showMainSection('overview')">📊 Overview</button>
+                <button class="nav-tab" onclick="showMainSection('students')">👥 Students</button>
+                <button class="nav-tab" onclick="showMainSection('fees')">💰 Fee Management</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overviewSection" class="section active">
+                <div class="content-section">
+                    <h2 class="section-title">📊 Academic Overview</h2>
+                    <div class="stats-grid" id="overviewStats">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h2 class="section-title">📋 Year & Course Distribution</h2>
+                    <div class="table-container">
+                        <table class="table" id="summaryTable">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>CE</th>
+                                    <th>ME</th>
+                                    <th>EC</th>
+                                    <th>CS</th>
+                                    <th>EE</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Section -->
+            <div id="studentsSection" class="section">
+                <div class="content-section">
+                    <h2 class="section-title">👥 Student Directory</h2>
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Course</label>
+                            <select class="filter-select" id="studentCourseFilter">
+                                <option value="">All Courses</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Year</label>
+                            <select class="filter-select" id="studentYearFilter">
+                                <option value="">All Years</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" class="filter-input" id="studentNameFilter" placeholder="Student or father name...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Actions</label>
+                            <div class="btn-grid">
+                                <button class="btn btn-secondary" onclick="clearStudentFilters()">Clear</button>
+                                <button class="btn btn-success" onclick="exportStudentsCSV()">📥 CSV</button>
+                                <button class="btn btn-warning" onclick="exportStudentsPDF()">📄 PDF</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Student Name</th>
+                                    <th>Father Name</th>
+                                    <th>Year</th>
+                                    <th>Course</th>
+                                    <th>Reg No</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fees Section -->
+            <div id="feesSection" class="section">
+                <div class="content-section">
+                    <h2 class="section-title">💰 Fee Management</h2>
+                    
+                    <div class="stats-grid" id="feeStats">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Course</label>
+                            <select class="filter-select" id="feeCourseFilter">
+                                <option value="">All Courses</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Status</label>
+                            <select class="filter-select" id="feeStatusFilter">
+                                <option value="">All Students</option>
+                                <option value="paid">Fully Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="partial">Partial</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <input type="text" class="filter-input" id="feeNameFilter" placeholder="Student name...">
+                        </div>
+                        <div class="filter-group">
+                            <label>Actions</label>
+                            <div class="btn-grid">
+                                <button class="btn btn-secondary" onclick="clearFeeFilters()">Clear</button>
+                                <button class="btn btn-success" onclick="exportFeesCSV()">📥 CSV</button>
+                                <button class="btn btn-warning" onclick="exportFeesPDF()">📄 PDF</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table" id="feesTable">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Student Name</th>
+                                    <th>Father Name</th>
+                                    <th>Year</th>
+                                    <th>Course</th>
+                                    <th>Reg No</th>
+                                    <th>Category</th>
+                                    <th>SMP Alloted</th>
+                                    <th>SVK Alloted</th>
+                                    <th>SMP Paid</th>
+                                    <th>SVK Paid</th>
+                                    <th>SMP Due</th>
+                                    <th>SVK Due</th>
+                                    <th>Total Alloted</th>
+                                    <th>Total Paid</th>
+                                    <th>Total Due</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Details Section -->
+            <div id="courseDetailsSection" class="section">
+                <div class="course-header">
+                    <h2 class="course-title" id="courseDetailTitle">Course Details</h2>
+                    <button class="back-btn" onclick="showMainSection('overview')">← Back to Dashboard</button>
+                </div>
+
+                <div class="stats-grid" id="courseDetailStats">
+                    <!-- Populated by JavaScript -->
+                </div>
+
+                <div class="content-section">
+                    <div class="report-tabs">
+                        <button class="report-tab active" onclick="showCourseReport('students')">👥 Students</button>
+                        <button class="report-tab" onclick="showCourseReport('academic')">📚 Academic</button>
+                        <button class="report-tab" onclick="showCourseReport('fees')">💰 Fees</button>
+                        <button class="report-tab" onclick="showCourseReport('dues')">⚠️ Dues</button>
+                    </div>
+
+                    <div id="courseReportContent">
+                        <!-- Dynamic content based on selected report -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+
+    <script>
+        // Application State
+        let appState = {
+            studentsData: [],
+            allStudentsData: [],
+            consolidatedStudents: [],
+            duesData: [],
+            currentCourse: null,
+            currentReport: 'students',
+            filters: {
+                student: { course: '', year: '', name: '' },
+                fee: { course: '', status: '', name: '' }
+            }
+        };
+
+        // Course configuration
+        const COURSES = {
+            'CS': { name: 'Computer Science Engineering', color: 'cs' },
+            'CE': { name: 'Civil Engineering', color: 'ce' },
+            'EC': { name: 'Electronics & Communication', color: 'ec' },
+            'ME': { name: 'Mechanical Engineering', color: 'me' },
+            'EE': { name: 'Electrical Engineering', color: 'ee' }
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            loadStudentData();
+        });
+
+        // Data loading functions
+        async function loadStudentData() {
+            try {
+                showLoading();
+                
+                // Try multiple possible CSV file locations/names
+                const possibleFiles = ['students.csv', 'data/students.csv', './students.csv'];
+                let csvData = null;
+                let loadedFrom = null;
+
+                for (const file of possibleFiles) {
+                    try {
+                        const response = await fetch(file);
+                        if (response.ok) {
+                            csvData = await response.text();
+                            loadedFrom = file;
+                            break;
+                        }
+                    } catch (err) {
+                        console.log(`Failed to load from ${file}:`, err.message);
+                    }
+                }
+
+                if (!csvData) {
+                    throw new Error('CSV file not found. Please ensure students.csv is in the correct location.');
+                }
+
+                console.log(`Successfully loaded data from: ${loadedFrom}`);
+                await parseCSVData(csvData);
+                initializeDashboard();
+                
+            } catch (error) {
+                console.error('Data loading error:', error);
+                showError(error.message);
+            }
+        }
+
+        async function parseCSVData(csvText) {
+            return new Promise((resolve) => {
+                try {
+                    const lines = csvText.trim().split('\n').filter(line => line.trim());
+                    if (lines.length === 0) throw new Error('CSV file is empty');
+
+                    const headers = parseCSVLine(lines[0]);
+                    console.log('CSV Headers:', headers);
+
+                    // Find status column
+                    const statusColumn = headers.find(h => 
+                        h.toLowerCase().includes('in/out') || 
+                        h.toLowerCase().includes('status')
+                    ) || 'In/Out';
+
+                    appState.allStudentsData = [];
+                    appState.studentsData = [];
+
+                    // Parse each data line
+                    for (let i = 1; i < lines.length; i++) {
+                        try {
+                            const values = parseCSVLine(lines[i]);
+                            const student = {};
+                            
+                            headers.forEach((header, index) => {
+                                student[header] = values[index] ? values[index].trim() : '';
+                            });
+
+                            // Only include students with 'In' status
+                            const status = student[statusColumn] || '';
+                            if (status.toLowerCase() === 'in') {
+                                appState.allStudentsData.push(student);
+                                
+                                // Regular students (excluding those with due fee remarks)
+                                if (!student['Remarks']?.toLowerCase().includes('due fee')) {
+                                    appState.studentsData.push(student);
+                                }
+                            }
+                        } catch (lineError) {
+                            console.warn(`Error parsing line ${i + 1}:`, lineError);
+                        }
+                    }
+
+                    // Sort data
+                    appState.allStudentsData.sort((a, b) => 
+                        (a['Student Name'] || '').localeCompare(b['Student Name'] || '')
+                    );
+                    appState.studentsData.sort((a, b) => 
+                        (a['Student Name'] || '').localeCompare(b['Student Name'] || '')
+                    );
+
+                    console.log(`Loaded ${appState.allStudentsData.length} total students`);
+                    console.log(`${appState.studentsData.length} regular students`);
+
+                    // Process dues data
+                    processDuesData();
+                    
+                    resolve();
+                } catch (error) {
+                    throw new Error(`CSV parsing failed: ${error.message}`);
+                }
+            });
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+                
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result;
+        }
+
+        function processDuesData() {
+            // Group students by registration number for installment aggregation
+            const studentGroups = {};
+            
+            appState.allStudentsData.forEach(student => {
+                const regNo = student['Reg No'] || '';
+                const course = student['Course'] || '';
+                
+                if (!regNo || !course) return;
+                
+                // Use different grouping strategy for EE course
+                const uniqueKey = course.toUpperCase() === 'EE' ? 
+                    `${regNo}_${course}` : regNo;
+                
+                if (!studentGroups[uniqueKey]) {
+                    studentGroups[uniqueKey] = [];
+                }
+                studentGroups[uniqueKey].push(student);
+            });
+
+            // Create consolidated student records for all students (not just dues)
+            appState.consolidatedStudents = [];
+            appState.duesData = [];
+
+            Object.entries(studentGroups).forEach(([uniqueKey, records]) => {
+                if (records.length === 0) return;
+                
+                const baseStudent = records[0];
+                
+                // Parse amounts
+                const parseAmount = (value) => {
+                    if (!value) return 0;
+                    const num = parseFloat(value.toString().replace(/[^\d.-]/g, ''));
+                    return isNaN(num) ? 0 : Math.abs(num);
+                };
+
+                // Aggregate payments across all installment records
+                let totalPaidSMP = 0;
+                let totalPaidSVK = 0;
+                
+                records.forEach(record => {
+                    totalPaidSMP += parseAmount(record['SMP Paid']);
+                    totalPaidSVK += parseAmount(record['SVK Paid']);
+                });
+
+                const allotedSMP = parseAmount(baseStudent['Alloted Fee SMP']);
+                const allotedSVK = parseAmount(baseStudent['Alloted Fee SVK']);
+                const totalAlloted = allotedSMP + allotedSVK;
+                const totalPaid = totalPaidSMP + totalPaidSVK;
+                const smpDue = Math.max(0, allotedSMP - totalPaidSMP);
+                const svkDue = Math.max(0, allotedSVK - totalPaidSVK);
+                const totalDues = smpDue + svkDue;
+
+                // Create consolidated student record
+                const consolidatedStudent = {
+                    ...baseStudent,
+                    'SMP Alloted': allotedSMP,
+                    'SVK Alloted': allotedSVK,
+                    'SMP Paid': totalPaidSMP,
+                    'SVK Paid': totalPaidSVK,
+                    'SMP Due': smpDue,
+                    'SVK Due': svkDue,
+                    'Total Alloted': totalAlloted,
+                    'Total Paid': totalPaid,
+                    'Total Dues': totalDues,
+                    'Payment Records': records.length
+                };
+
+                // Add to consolidated list
+                appState.consolidatedStudents.push(consolidatedStudent);
+
+                // Add to dues list if has outstanding dues
+                if (totalDues > 0) {
+                    appState.duesData.push(consolidatedStudent);
+                }
+            });
+
+            // Sort consolidated students: Year, Name, Course
+            appState.consolidatedStudents.sort((a, b) => {
+                const yearCompare = (a['Year'] || '').localeCompare(b['Year'] || '');
+                if (yearCompare !== 0) return yearCompare;
+                
+                const nameCompare = (a['Student Name'] || '').localeCompare(b['Student Name'] || '');
+                if (nameCompare !== 0) return nameCompare;
+                
+                return (a['Course'] || '').localeCompare(b['Course'] || '');
+            });
+
+            // Sort dues data the same way
+            appState.duesData.sort((a, b) => {
+                const yearCompare = (a['Year'] || '').localeCompare(b['Year'] || '');
+                if (yearCompare !== 0) return yearCompare;
+                
+                const nameCompare = (a['Student Name'] || '').localeCompare(b['Student Name'] || '');
+                if (nameCompare !== 0) return nameCompare;
+                
+                return (a['Course'] || '').localeCompare(b['Course'] || '');
+            });
+
+            console.log(`Processed ${appState.consolidatedStudents.length} consolidated students`);
+            console.log(`${appState.duesData.length} students with outstanding dues`);
+        }
+
+        // UI State Management
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function initializeDashboard() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            generateMetrics();
+            generateOverviewStats();
+            generateSummaryTable();
+            populateFilters();
+            updateStudentsList();
+            updateFeesList();
+            generateFeeStats();
+        }
+
+        function retryLoad() {
+            loadStudentData();
+        }
+
+        // Metrics Generation
+        function generateMetrics() {
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = '';
+
+            // Count students by course using consolidated data
+            const courseCounts = {};
+            Object.keys(COURSES).forEach(course => {
+                courseCounts[course] = appState.consolidatedStudents.filter(s => s['Course'] === course).length;
+            });
+
+            // Create course metric cards
+            Object.entries(COURSES).forEach(([code, config]) => {
+                const count = courseCounts[code] || 0;
+                const card = createMetricCard(code, config.name, count, config.color);
+                card.onclick = () => showCourseDetails(code);
+                grid.appendChild(card);
+            });
+
+            // Create "All" metric card
+            const totalCount = appState.consolidatedStudents.length;
+            const allCard = createMetricCard('ALL', 'All Courses', totalCount, 'all');
+            allCard.onclick = () => showCourseDetails('ALL');
+            grid.appendChild(allCard);
+        }
+
+        function createMetricCard(code, name, count, colorClass) {
+            const card = document.createElement('div');
+            card.className = `metric-card ${colorClass}`;
+            card.innerHTML = `
+                <div class="metric-number">${count}</div>
+                <div class="metric-label">${code === 'ALL' ? name : code}</div>
+                <div class="metric-sublabel">${code === 'ALL' ? 'Total Students' : name}</div>
+            `;
+            return card;
+        }
+
+        function generateOverviewStats() {
+            const grid = document.getElementById('overviewStats');
+            grid.innerHTML = '';
+
+            const totalStudents = appState.consolidatedStudents.length;
+            const studentsWithDues = appState.duesData.length;
+            const collectionRate = totalStudents > 0 ? Math.round(((totalStudents - studentsWithDues) / totalStudents) * 100) : 0;
+
+            const stats = [
+                { label: 'Total Students', value: totalStudents, color: 'var(--primary)' },
+                { label: 'Active Courses', value: Object.keys(COURSES).length, color: 'var(--success)' },
+                { label: 'Students with Dues', value: studentsWithDues, color: 'var(--error)' },
+                { label: 'Fee Collection Rate', value: `${collectionRate}%`, color: 'var(--warning)' }
+            ];
+
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-number" style="color: ${stat.color};">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function generateSummaryTable() {
+            const tbody = document.querySelector('#summaryTable tbody');
+            tbody.innerHTML = '';
+
+            // Group by year and course using consolidated students
+            const yearSummary = {};
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                
+                if (!yearSummary[year]) {
+                    yearSummary[year] = { CE: 0, ME: 0, EC: 0, CS: 0, EE: 0, total: 0 };
+                }
+                
+                if (yearSummary[year][course] !== undefined) {
+                    yearSummary[year][course]++;
+                    yearSummary[year].total++;
+                }
+            });
+
+            // Generate table rows
+            const grandTotals = { CE: 0, ME: 0, EC: 0, CS: 0, EE: 0, total: 0 };
+            
+            Object.entries(yearSummary).forEach(([year, courses]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${year}</strong></td>
+                    <td>${courses.CE}</td>
+                    <td>${courses.ME}</td>
+                    <td>${courses.EC}</td>
+                    <td>${courses.CS}</td>
+                    <td>${courses.EE}</td>
+                    <td><strong>${courses.total}</strong></td>
+                `;
+                tbody.appendChild(row);
+
+                Object.keys(grandTotals).forEach(key => {
+                    grandTotals[key] += courses[key];
+                });
+            });
+
+            // Grand total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'var(--primary)';
+            totalRow.style.color = 'white';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL</strong></td>
+                <td><strong>${grandTotals.CE}</strong></td>
+                <td><strong>${grandTotals.ME}</strong></td>
+                <td><strong>${grandTotals.EC}</strong></td>
+                <td><strong>${grandTotals.CS}</strong></td>
+                <td><strong>${grandTotals.EE}</strong></td>
+                <td><strong>${grandTotals.total}</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        // Navigation
+        function showMainSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            const targetSection = sectionName + 'Section';
+            document.getElementById(targetSection).classList.add('active');
+            
+            // Set active nav tab
+            event.target.classList.add('active');
+        }
+
+        function showCourseDetails(courseCode) {
+            appState.currentCourse = courseCode;
+            
+            // Filter consolidated data for the course
+            const courseData = courseCode === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === courseCode);
+            
+            // Update course header
+            const title = courseCode === 'ALL' ? 
+                'All Courses Report' : 
+                `${COURSES[courseCode]?.name || courseCode} (${courseCode})`;
+            document.getElementById('courseDetailTitle').textContent = title;
+            
+            // Generate course stats
+            generateCourseStats(courseData, courseCode);
+            
+            // Show course details section
+            showMainSection('courseDetails');
+            
+            // Show initial report
+            showCourseReport('students');
+        }
+
+        function generateCourseStats(courseData, courseCode) {
+            const grid = document.getElementById('courseDetailStats');
+            grid.innerHTML = '';
+
+            const dueStudents = courseCode === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === courseCode);
+
+            const totalDuesAmount = dueStudents.reduce((sum, s) => sum + (s['Total Dues'] || 0), 0);
+            const totalAlloted = courseData.reduce((sum, s) => sum + (s['Total Alloted'] || 0), 0);
+            const totalPaid = courseData.reduce((sum, s) => sum + (s['Total Paid'] || 0), 0);
+
+            const stats = [
+                { label: 'Total Students', value: courseData.length, color: 'var(--primary)' },
+                { label: 'Students Paid', value: courseData.length - dueStudents.length, color: 'var(--success)' },
+                { label: 'Students with Dues', value: dueStudents.length, color: 'var(--error)' },
+                { label: 'Total Alloted', value: `₹${totalAlloted.toLocaleString('en-IN')}`, color: 'var(--info)' },
+                { label: 'Total Collected', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'var(--success)' },
+                { label: 'Total Outstanding', value: `₹${totalDuesAmount.toLocaleString('en-IN')}`, color: 'var(--error)' }
+            ];
+
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-number" style="color: ${stat.color};">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showCourseReport(reportType) {
+            appState.currentReport = reportType;
+            
+            // Update active tab
+            document.querySelectorAll('.report-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const content = document.getElementById('courseReportContent');
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.allStudentsData : 
+                appState.allStudentsData.filter(s => s['Course'] === appState.currentCourse);
+            
+            switch(reportType) {
+                case 'students':
+                    showStudentsReport(content, courseData);
+                    break;
+                case 'academic':
+                    showAcademicReport(content, courseData);
+                    break;
+                case 'fees':
+                    showFeesReport(content, courseData);
+                    break;
+                case 'dues':
+                    showDuesReport(content);
+                    break;
+            }
+        }
+
+        function showStudentsReport(container, data) {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            container.innerHTML = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" class="filter-input" id="courseStudentFilter" placeholder="Student name..." oninput="filterCourseStudents()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Year</label>
+                        <select class="filter-select" id="courseYearFilter" onchange="filterCourseStudents()">
+                            <option value="">All Years</option>
+                            ${[...new Set(courseData.map(s => s['Year']))].sort().map(year => 
+                                `<option value="${year}">${year}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Actions</label>
+                        <div class="btn-grid">
+                            <button class="btn btn-secondary" onclick="clearCourseFilters()">Clear</button>
+                            <button class="btn btn-success" onclick="exportCourseStudentsCSV()">📥 CSV</button>
+                            <button class="btn btn-warning" onclick="exportCourseStudentsPDF()">📄 PDF</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table" id="courseStudentsTable">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Student Name</th>
+                                <th>Father Name</th>
+                                <th>Year</th>
+                                <th>Course</th>
+                                <th>Reg No</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            `;
+            
+            displayCourseStudents(courseData);
+        }
+
+        function showAcademicReport(container, data) {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+                
+            container.innerHTML = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Export Options</label>
+                        <div class="btn-grid">
+                            <button class="btn btn-success" onclick="exportCourseAcademicCSV()">📥 Export CSV</button>
+                            <button class="btn btn-warning" onclick="exportCourseAcademicPDF()">📄 Export PDF</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Student Name</th>
+                                <th>Father Name</th>
+                                <th>Year</th>
+                                <th>Course</th>
+                                <th>Reg No</th>
+                                <th>Cat</th>
+                                <th>Adm</th>
+                                <th>Adm Cat</th>
+                                <th>Date</th>
+                                <th>Rpt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${courseData.map((student, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${student['Student Name'] || ''}</td>
+                                    <td>${student['Father Name'] || ''}</td>
+                                    <td>${student['Year'] || ''}</td>
+                                    <td>${student['Course'] || ''}</td>
+                                    <td>${student['Reg No'] || ''}</td>
+                                    <td>${student['Cat'] || ''}</td>
+                                    <td>${student['Adm'] || ''}</td>
+                                    <td>${student['Adm Cat'] || ''}</td>
+                                    <td>${student['Date'] || ''}</td>
+                                    <td>${student['Rpt'] || ''}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="background: var(--primary); color: white; font-weight: bold;">
+                                <td colspan="10"><strong>TOTAL STUDENTS</strong></td>
+                                <td><strong>${courseData.length}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function showFeesReport(container, data) {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            // Calculate totals
+            let totalSMPAlloted = 0, totalSVKAlloted = 0, totalSMPPaid = 0, totalSVKPaid = 0;
+            let totalSMPDue = 0, totalSVKDue = 0, totalAlloted = 0, totalPaid = 0, totalDue = 0;
+
+            courseData.forEach(student => {
+                totalSMPAlloted += student['SMP Alloted'] || 0;
+                totalSVKAlloted += student['SVK Alloted'] || 0;
+                totalSMPPaid += student['SMP Paid'] || 0;
+                totalSVKPaid += student['SVK Paid'] || 0;
+                totalSMPDue += student['SMP Due'] || 0;
+                totalSVKDue += student['SVK Due'] || 0;
+                totalAlloted += student['Total Alloted'] || 0;
+                totalPaid += student['Total Paid'] || 0;
+                totalDue += student['Total Dues'] || 0;
+            });
+
+            container.innerHTML = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Export Options</label>
+                        <div class="btn-grid">
+                            <button class="btn btn-success" onclick="exportCourseFeesCSV()">📥 Export CSV</button>
+                            <button class="btn btn-warning" onclick="exportCourseFeesPDF()">📄 Export PDF</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Student Name</th>
+                                <th>Father Name</th>
+                                <th>Year</th>
+                                <th>Course</th>
+                                <th>Reg No</th>
+                                <th>Cat</th>
+                                <th>SMP Alloted</th>
+                                <th>SVK Alloted</th>
+                                <th>SMP Paid</th>
+                                <th>SVK Paid</th>
+                                <th>SMP Due</th>
+                                <th>SVK Due</th>
+                                <th>Total Alloted</th>
+                                <th>Total Paid</th>
+                                <th>Total Due</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${courseData.map((student, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${student['Student Name'] || ''}</td>
+                                    <td>${student['Father Name'] || ''}</td>
+                                    <td>${student['Year'] || ''}</td>
+                                    <td>${student['Course'] || ''}</td>
+                                    <td>${student['Reg No'] || ''}</td>
+                                    <td>${student['Cat'] || ''}</td>
+                                    <td class="amount">₹${(student['SMP Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SVK Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SMP Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SVK Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="${student['SMP Due'] > 0 ? 'due' : 'amount'}">₹${(student['SMP Due'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="${student['SVK Due'] > 0 ? 'due' : 'amount'}">₹${(student['SVK Due'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['Total Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['Total Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="${student['Total Dues'] > 0 ? 'due' : 'amount'}">₹${(student['Total Dues'] || 0).toLocaleString('en-IN')}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="background: var(--primary); color: white; font-weight: bold;">
+                                <td colspan="7"><strong>TOTAL (${courseData.length} Students)</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPDue.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKDue.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalDue.toLocaleString('en-IN')}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function showDuesReport(container) {
+            const dueStudents = appState.currentCourse === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
+
+            // Calculate totals
+            let totalSMPAlloted = 0, totalSVKAlloted = 0, totalSMPPaid = 0, totalSVKPaid = 0;
+            let totalSMPDue = 0, totalSVKDue = 0, totalAlloted = 0, totalPaid = 0, totalDue = 0;
+
+            dueStudents.forEach(student => {
+                totalSMPAlloted += student['SMP Alloted'] || 0;
+                totalSVKAlloted += student['SVK Alloted'] || 0;
+                totalSMPPaid += student['SMP Paid'] || 0;
+                totalSVKPaid += student['SVK Paid'] || 0;
+                totalSMPDue += student['SMP Due'] || 0;
+                totalSVKDue += student['SVK Due'] || 0;
+                totalAlloted += student['Total Alloted'] || 0;
+                totalPaid += student['Total Paid'] || 0;
+                totalDue += student['Total Dues'] || 0;
+            });
+
+            container.innerHTML = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Export Options</label>
+                        <div class="btn-grid">
+                            <button class="btn btn-success" onclick="exportCourseDuesCSV()">📥 Export CSV</button>
+                            <button class="btn btn-warning" onclick="exportCourseDuesPDF()">📄 Export PDF</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Student Name</th>
+                                <th>Father Name</th>
+                                <th>Year</th>
+                                <th>Course</th>
+                                <th>Reg No</th>
+                                <th>Cat</th>
+                                <th>SMP Alloted</th>
+                                <th>SVK Alloted</th>
+                                <th>SMP Paid</th>
+                                <th>SVK Paid</th>
+                                <th>SMP Due</th>
+                                <th>SVK Due</th>
+                                <th>Total Alloted</th>
+                                <th>Total Paid</th>
+                                <th>Total Due</th>
+                                <th>Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dueStudents.map((student, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${student['Student Name'] || ''}</td>
+                                    <td>${student['Father Name'] || ''}</td>
+                                    <td>${student['Year'] || ''}</td>
+                                    <td>${student['Course'] || ''}</td>
+                                    <td>${student['Reg No'] || ''}</td>
+                                    <td>${student['Cat'] || ''}</td>
+                                    <td class="amount">₹${(student['SMP Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SVK Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SMP Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['SVK Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="due">₹${(student['SMP Due'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="due">₹${(student['SVK Due'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['Total Alloted'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="amount">₹${(student['Total Paid'] || 0).toLocaleString('en-IN')}</td>
+                                    <td class="due">₹${(student['Total Dues'] || 0).toLocaleString('en-IN')}</td>
+                                    <td>${student['Payment Records'] || 1}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="background: var(--primary); color: white; font-weight: bold;">
+                                <td colspan="7"><strong>TOTAL (${dueStudents.length} Students)</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSMPDue.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalSVKDue.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalAlloted.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalPaid.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>₹${totalDue.toLocaleString('en-IN')}</strong></td>
+                                <td style="color: white;"><strong>-</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Individual Course Export Functions
+        function exportCourseStudentsCSV() {
+            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
+            const yearFilter = document.getElementById('courseYearFilter').value;
+            
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            const filtered = courseData.filter(student => {
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                return matchesName && matchesYear;
+            });
+
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...filtered.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    `"${student['In/Out'] || ''}"`
+                ].join(',')),
+                `"Total Students: ${filtered.length}","","","","","","",""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Students_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseStudentsPDF() {
+            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
+            const yearFilter = document.getElementById('courseYearFilter').value;
+            
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            const filtered = courseData.filter(student => {
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                return matchesName && matchesYear;
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Students Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            const filters = `Year: ${yearFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
+            doc.text(filters, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
+            const colWidths = [15, 45, 45, 20, 25, 30, 20, 20];
+            
+            createPDFTable(doc, headers, colWidths, 30, filtered.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                student['In/Out'] || ''
+            ]), `Total Students: ${filtered.length}`);
+
+            doc.save(`${appState.currentCourse}_Students_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseAcademicCSV() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...courseData.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    `"${student['Adm'] || ''}"`,
+                    `"${student['Adm Cat'] || ''}"`,
+                    `"${student['Date'] || ''}"`,
+                    `"${student['Rpt'] || ''}"`
+                ].join(',')),
+                `"Total Students: ${courseData.length}","","","","","","","","","",""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Academic_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseAcademicPDF() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Academic Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
+            const colWidths = [12, 35, 35, 15, 20, 25, 15, 15, 20, 20, 15];
+            
+            createPDFTable(doc, headers, colWidths, 30, courseData.map((student, index) => [
+                (index + 1).toString(),
+                truncateText(student['Student Name'] || '', 15),
+                truncateText(student['Father Name'] || '', 15),
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                student['Adm'] || '',
+                student['Adm Cat'] || '',
+                student['Date'] || '',
+                student['Rpt'] || ''
+            ]), `Total Students: ${courseData.length}`);
+
+            doc.save(`${appState.currentCourse}_Academic_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseFeesCSV() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const totals = calculateFeeTotals(courseData);
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
+                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
+                           'Total Alloted', 'Total Paid', 'Total Due'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...courseData.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    student['SMP Alloted'] || 0,
+                    student['SVK Alloted'] || 0,
+                    student['SMP Paid'] || 0,
+                    student['SVK Paid'] || 0,
+                    student['SMP Due'] || 0,
+                    student['SVK Due'] || 0,
+                    student['Total Alloted'] || 0,
+                    student['Total Paid'] || 0,
+                    student['Total Dues'] || 0
+                ].join(',')),
+                `"Total (${courseData.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue}`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Fees_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseFeesPDF() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Fees Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D'];
+            const colWidths = [12, 25, 25, 10, 15, 18, 12, 15, 15, 15, 15, 15, 15, 18, 18, 18];
+            
+            const tableData = courseData.map((student, index) => [
+                (index + 1).toString(),
+                truncateText(student['Student Name'] || '', 12),
+                truncateText(student['Father Name'] || '', 12),
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                formatCurrency(student['SMP Alloted'] || 0),
+                formatCurrency(student['SVK Alloted'] || 0),
+                formatCurrency(student['SMP Paid'] || 0),
+                formatCurrency(student['SVK Paid'] || 0),
+                formatCurrency(student['SMP Due'] || 0),
+                formatCurrency(student['SVK Due'] || 0),
+                formatCurrency(student['Total Alloted'] || 0),
+                formatCurrency(student['Total Paid'] || 0),
+                formatCurrency(student['Total Dues'] || 0)
+            ]);
+
+            const totals = calculateFeeTotals(courseData);
+            const totalRow = [`Total (${courseData.length})`, '', '', '', '', '', '', 
+                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
+                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
+                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
+                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
+                           formatCurrency(totals.totalDue)];
+
+            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
+            doc.save(`${appState.currentCourse}_Fees_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseDuesCSV() {
+            const dueStudents = appState.currentCourse === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
+
+            const totals = calculateFeeTotals(dueStudents);
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
+                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
+                           'Total Alloted', 'Total Paid', 'Total Due', 'Payment Records'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...dueStudents.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    student['SMP Alloted'] || 0,
+                    student['SVK Alloted'] || 0,
+                    student['SMP Paid'] || 0,
+                    student['SVK Paid'] || 0,
+                    student['SMP Due'] || 0,
+                    student['SVK Due'] || 0,
+                    student['Total Alloted'] || 0,
+                    student['Total Paid'] || 0,
+                    student['Total Dues'] || 0,
+                    student['Payment Records'] || 1
+                ].join(',')),
+                `"Total (${dueStudents.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue},""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Dues_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseDuesPDF() {
+            const dueStudents = appState.currentCourse === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Dues Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${dueStudents.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D', 'Rec'];
+            const colWidths = [10, 22, 22, 10, 12, 16, 10, 14, 14, 14, 14, 14, 14, 16, 16, 16, 10];
+            
+            const tableData = dueStudents.map((student, index) => [
+                (index + 1).toString(),
+                truncateText(student['Student Name'] || '', 10),
+                truncateText(student['Father Name'] || '', 10),
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                formatCurrency(student['SMP Alloted'] || 0),
+                formatCurrency(student['SVK Alloted'] || 0),
+                formatCurrency(student['SMP Paid'] || 0),
+                formatCurrency(student['SVK Paid'] || 0),
+                formatCurrency(student['SMP Due'] || 0),
+                formatCurrency(student['SVK Due'] || 0),
+                formatCurrency(student['Total Alloted'] || 0),
+                formatCurrency(student['Total Paid'] || 0),
+                formatCurrency(student['Total Dues'] || 0),
+                (student['Payment Records'] || 1).toString()
+            ]);
+
+            const totals = calculateFeeTotals(dueStudents);
+            const totalRow = [`Tot (${dueStudents.length})`, '', '', '', '', '', '', 
+                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
+                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
+                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
+                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
+                           formatCurrency(totals.totalDue), '-'];
+
+            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
+            doc.save(`${appState.currentCourse}_Dues_${getCurrentDate()}.pdf`);
+        }
+
+        // Student List Functions
+        function populateFilters() {
+            // Populate course filters using consolidated students
+            const courses = [...new Set(appState.consolidatedStudents.map(s => s['Course']))].sort();
+            const years = [...new Set(appState.consolidatedStudents.map(s => s['Year']))].sort();
+
+            ['studentCourseFilter', 'feeCourseFilter'].forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">All Courses</option>';
+                courses.forEach(course => {
+                    select.innerHTML += `<option value="${course}">${course}</option>`;
+                });
+            });
+
+            document.getElementById('studentYearFilter').innerHTML = '<option value="">All Years</option>';
+            years.forEach(year => {
+                document.getElementById('studentYearFilter').innerHTML += `<option value="${year}">${year}</option>`;
+            });
+
+            // Add event listeners
+            ['studentCourseFilter', 'studentYearFilter', 'studentNameFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateStudentsList);
+                document.getElementById(id).addEventListener('input', updateStudentsList);
+            });
+
+            ['feeCourseFilter', 'feeStatusFilter', 'feeNameFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateFeesList);
+                document.getElementById(id).addEventListener('input', updateFeesList);
+            });
+        }
+
+        function updateStudentsList() {
+            const courseFilter = document.getElementById('studentCourseFilter').value;
+            const yearFilter = document.getElementById('studentYearFilter').value;
+            const nameFilter = document.getElementById('studentNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+
+                return matchesCourse && matchesYear && matchesName;
+            });
+
+            displayStudentsTable(filtered);
+        }
+
+        function displayStudentsTable(students) {
+            const tbody = document.querySelector('#studentsTable tbody');
+            tbody.innerHTML = '';
+
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student['Student Name'] || ''}</td>
+                    <td>${student['Father Name'] || ''}</td>
+                    <td>${student['Year'] || ''}</td>
+                    <td>${student['Course'] || ''}</td>
+                    <td>${student['Reg No'] || ''}</td>
+                    <td>${student['In/Out'] || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'var(--primary)';
+            totalRow.style.color = 'white';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td colspan="6"><strong>TOTAL STUDENTS</strong></td>
+                <td><strong>${students.length}</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        function displayCourseStudents(students) {
+            const tbody = document.querySelector('#courseStudentsTable tbody');
+            tbody.innerHTML = '';
+
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student['Student Name'] || ''}</td>
+                    <td>${student['Father Name'] || ''}</td>
+                    <td>${student['Year'] || ''}</td>
+                    <td>${student['Course'] || ''}</td>
+                    <td>${student['Reg No'] || ''}</td>
+                    <td>${student['Cat'] || ''}</td>
+                    <td>${student['In/Out'] || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'var(--primary)';
+            totalRow.style.color = 'white';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td colspan="7"><strong>TOTAL STUDENTS</strong></td>
+                <td><strong>${students.length}</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        // Fee List Functions
+        function generateFeeStats() {
+            const grid = document.getElementById('feeStats');
+            grid.innerHTML = '';
+
+            const totalAlloted = appState.consolidatedStudents.reduce((sum, s) => sum + (s['Total Alloted'] || 0), 0);
+            const totalPaid = appState.consolidatedStudents.reduce((sum, s) => sum + (s['Total Paid'] || 0), 0);
+            const totalDues = appState.consolidatedStudents.reduce((sum, s) => sum + (s['Total Dues'] || 0), 0);
+
+            const stats = [
+                { label: 'Total Students', value: appState.consolidatedStudents.length, color: 'var(--primary)' },
+                { label: 'Total Alloted', value: `₹${totalAlloted.toLocaleString('en-IN')}`, color: 'var(--info)' },
+                { label: 'Total Collected', value: `₹${totalPaid.toLocaleString('en-IN')}`, color: 'var(--success)' },
+                { label: 'Total Outstanding', value: `₹${totalDues.toLocaleString('en-IN')}`, color: 'var(--error)' },
+                { label: 'Collection Rate', value: totalAlloted > 0 ? `${((totalPaid / totalAlloted) * 100).toFixed(1)}%` : '0%', color: 'var(--warning)' }
+            ];
+
+            stats.forEach(stat => {
+                const card = document.createElement('div');
+                card.className = 'stat-card';
+                card.innerHTML = `
+                    <div class="stat-number" style="color: ${stat.color};">${stat.value}</div>
+                    <div class="stat-label">${stat.label}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateFeesList() {
+            const courseFilter = document.getElementById('feeCourseFilter').value;
+            const statusFilter = document.getElementById('feeStatusFilter').value;
+            const nameFilter = document.getElementById('feeNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                
+                // Determine status based on dues
+                const status = student['Total Dues'] === 0 ? 'paid' : 
+                             student['Total Paid'] === 0 ? 'pending' : 'partial';
+                const matchesStatus = !statusFilter || status === statusFilter;
+                
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+
+                return matchesCourse && matchesStatus && matchesName;
+            });
+
+            displayFeesTable(filtered);
+        }
+
+        function displayFeesTable(feeData) {
+            const tbody = document.querySelector('#feesTable tbody');
+            tbody.innerHTML = '';
+
+            // Calculate totals
+            let totalSMPAlloted = 0, totalSVKAlloted = 0, totalSMPPaid = 0, totalSVKPaid = 0;
+            let totalSMPDue = 0, totalSVKDue = 0, totalAlloted = 0, totalPaid = 0, totalDue = 0;
+
+            feeData.forEach((student, index) => {
+                const status = student['Total Dues'] === 0 ? 'paid' : 
+                             student['Total Paid'] === 0 ? 'pending' : 'partial';
+                const statusClass = status === 'paid' ? 'status-paid' : 
+                                  status === 'pending' ? 'status-pending' : 'status-partial';
+                const statusText = status === 'paid' ? 'Paid' : 
+                                 status === 'pending' ? 'Pending' : 'Partial';
+
+                // Add to totals
+                totalSMPAlloted += student['SMP Alloted'] || 0;
+                totalSVKAlloted += student['SVK Alloted'] || 0;
+                totalSMPPaid += student['SMP Paid'] || 0;
+                totalSVKPaid += student['SVK Paid'] || 0;
+                totalSMPDue += student['SMP Due'] || 0;
+                totalSVKDue += student['SVK Due'] || 0;
+                totalAlloted += student['Total Alloted'] || 0;
+                totalPaid += student['Total Paid'] || 0;
+                totalDue += student['Total Dues'] || 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student['Student Name'] || ''}</td>
+                    <td>${student['Father Name'] || ''}</td>
+                    <td>${student['Year'] || ''}</td>
+                    <td>${student['Course'] || ''}</td>
+                    <td>${student['Reg No'] || ''}</td>
+                    <td>${student['Cat'] || ''}</td>
+                    <td class="amount">₹${(student['SMP Alloted'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${(student['SVK Alloted'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${(student['SMP Paid'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${(student['SVK Paid'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="${student['SMP Due'] > 0 ? 'due' : 'amount'}">₹${(student['SMP Due'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="${student['SVK Due'] > 0 ? 'due' : 'amount'}">₹${(student['SVK Due'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${(student['Total Alloted'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${(student['Total Paid'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="${student['Total Dues'] > 0 ? 'due' : 'amount'}">₹${(student['Total Dues'] || 0).toLocaleString('en-IN')}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'var(--primary)';
+            totalRow.style.color = 'white';
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `
+                <td colspan="7"><strong>TOTAL (${feeData.length} Students)</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSMPAlloted.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSVKAlloted.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSMPPaid.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSVKPaid.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSMPDue.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalSVKDue.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalAlloted.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalPaid.toLocaleString('en-IN')}</strong></td>
+                <td class="amount" style="color: white;"><strong>₹${totalDue.toLocaleString('en-IN')}</strong></td>
+                <td style="color: white;"><strong>${Math.round((totalPaid/totalAlloted)*100)}%</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        // Filter functions
+        function clearStudentFilters() {
+            document.getElementById('studentCourseFilter').value = '';
+            document.getElementById('studentYearFilter').value = '';
+            document.getElementById('studentNameFilter').value = '';
+            updateStudentsList();
+        }
+
+        function clearFeeFilters() {
+            document.getElementById('feeCourseFilter').value = '';
+            document.getElementById('feeStatusFilter').value = '';
+            document.getElementById('feeNameFilter').value = '';
+            updateFeesList();
+        }
+
+        function filterCourseStudents() {
+            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
+            const yearFilter = document.getElementById('courseYearFilter').value;
+            
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            const filtered = courseData.filter(student => {
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                
+                return matchesName && matchesYear;
+            });
+            
+            displayCourseStudents(filtered);
+        }
+
+        function clearCourseFilters() {
+            document.getElementById('courseStudentFilter').value = '';
+            document.getElementById('courseYearFilter').value = '';
+            
+            // Reset to show all course students
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            displayCourseStudents(courseData);
+        }
+
+        // Export functions
+        function exportStudentsCSV() {
+            const courseFilter = document.getElementById('studentCourseFilter').value;
+            const yearFilter = document.getElementById('studentYearFilter').value;
+            const nameFilter = document.getElementById('studentNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                return matchesCourse && matchesYear && matchesName;
+            });
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Status'];
+            const csvContent = [
+                headers.join(','),
+                ...filtered.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['In/Out'] || ''}"`
+                ].join(',')),
+                // Total row
+                `"Total Students: ${filtered.length}","","","","","",""`
+            ].join('\n');
+
+            downloadCSV(csvContent, `Students_List_${getCurrentDate()}.csv`);
+        }
+
+        function exportStudentsPDF() {
+            const courseFilter = document.getElementById('studentCourseFilter').value;
+            const yearFilter = document.getElementById('studentYearFilter').value;
+            const nameFilter = document.getElementById('studentNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                return matchesCourse && matchesYear && matchesName;
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+            
+            // Compact header
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('SMP Student List', 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            const filters = `Course: ${courseFilter || 'All'} | Year: ${yearFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
+            doc.text(filters, 148, 22, { align: 'center' });
+
+            // Table
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Status'];
+            const colWidths = [15, 45, 45, 20, 25, 30, 20];
+            let startY = 30;
+            
+            createPDFTable(doc, headers, colWidths, startY, filtered.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['In/Out'] || ''
+            ]), `Total Students: ${filtered.length}`);
+
+            doc.save(`Students_List_${getCurrentDate()}.pdf`);
+        }
+
+        function exportFeesCSV() {
+            const courseFilter = document.getElementById('feeCourseFilter').value;
+            const statusFilter = document.getElementById('feeStatusFilter').value;
+            const nameFilter = document.getElementById('feeNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                const status = student['Total Dues'] === 0 ? 'paid' : 
+                             student['Total Paid'] === 0 ? 'pending' : 'partial';
+                const matchesStatus = !statusFilter || status === statusFilter;
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                return matchesCourse && matchesStatus && matchesName;
+            });
+
+            // Calculate totals
+            const totals = calculateFeeTotals(filtered);
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 
+                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
+                           'Total Alloted', 'Total Paid', 'Total Due', 'Status'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...filtered.map((student, index) => {
+                    const status = student['Total Dues'] === 0 ? 'Paid' : 
+                                 student['Total Paid'] === 0 ? 'Pending' : 'Partial';
+                    return [
+                        index + 1,
+                        `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                        `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                        `"${student['Year'] || ''}"`,
+                        `"${student['Course'] || ''}"`,
+                        `"${student['Reg No'] || ''}"`,
+                        `"${student['Cat'] || ''}"`,
+                        student['SMP Alloted'] || 0,
+                        student['SVK Alloted'] || 0,
+                        student['SMP Paid'] || 0,
+                        student['SVK Paid'] || 0,
+                        student['SMP Due'] || 0,
+                        student['SVK Due'] || 0,
+                        student['Total Alloted'] || 0,
+                        student['Total Paid'] || 0,
+                        student['Total Dues'] || 0,
+                        status
+                    ].join(',');
+                }),
+                // Total row
+                `"Total (${filtered.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue},"${Math.round((totals.totalPaid/totals.totalAlloted)*100)}%"`
+            ].join('\n');
+
+            downloadCSV(csvContent, `Fee_Management_${getCurrentDate()}.csv`);
+        }
+
+        function exportFeesPDF() {
+            const courseFilter = document.getElementById('feeCourseFilter').value;
+            const statusFilter = document.getElementById('feeStatusFilter').value;
+            const nameFilter = document.getElementById('feeNameFilter').value.toLowerCase();
+
+            const filtered = appState.consolidatedStudents.filter(student => {
+                const matchesCourse = !courseFilter || student['Course'] === courseFilter;
+                const status = student['Total Dues'] === 0 ? 'paid' : 
+                             student['Total Paid'] === 0 ? 'pending' : 'partial';
+                const matchesStatus = !statusFilter || status === statusFilter;
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                return matchesCourse && matchesStatus && matchesName;
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+            
+            // Compact header
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('SMP Fee Management Report', 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            const filters = `Course: ${courseFilter || 'All'} | Status: ${statusFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
+            doc.text(filters, 148, 22, { align: 'center' });
+
+            // Table with smaller columns for fees
+            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D', 'Status'];
+            const colWidths = [12, 25, 25, 10, 15, 18, 12, 15, 15, 15, 15, 15, 15, 18, 18, 18, 15];
+            let startY = 30;
+            
+            const tableData = filtered.map((student, index) => {
+                const status = student['Total Dues'] === 0 ? 'Paid' : 
+                             student['Total Paid'] === 0 ? 'Pending' : 'Partial';
+                return [
+                    (index + 1).toString(),
+                    truncateText(student['Student Name'] || '', 12),
+                    truncateText(student['Father Name'] || '', 12),
+                    student['Year'] || '',
+                    student['Course'] || '',
+                    student['Reg No'] || '',
+                    student['Cat'] || '',
+                    formatCurrency(student['SMP Alloted'] || 0),
+                    formatCurrency(student['SVK Alloted'] || 0),
+                    formatCurrency(student['SMP Paid'] || 0),
+                    formatCurrency(student['SVK Paid'] || 0),
+                    formatCurrency(student['SMP Due'] || 0),
+                    formatCurrency(student['SVK Due'] || 0),
+                    formatCurrency(student['Total Alloted'] || 0),
+                    formatCurrency(student['Total Paid'] || 0),
+                    formatCurrency(student['Total Dues'] || 0),
+                    status
+                ];
+            });
+
+            const totals = calculateFeeTotals(filtered);
+            const totalRow = [`Total (${filtered.length})`, '', '', '', '', '', '', 
+                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
+                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
+                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
+                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
+                           formatCurrency(totals.totalDue), `${Math.round((totals.totalPaid/totals.totalAlloted)*100)}%`];
+
+            createPDFTable(doc, headers, colWidths, startY, tableData, totalRow);
+            doc.save(`Fee_Management_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseData(reportType) {
+            // This function is now replaced by specific export functions for each report type
+            // Kept for backward compatibility if any calls still exist
+            switch(reportType) {
+                case 'students':
+                    exportCourseStudentsCSV();
+                    break;
+                case 'academic':
+                    exportCourseAcademicCSV();
+                    break;
+                case 'fees':
+                    exportCourseFeesCSV();
+                    break;
+                case 'dues':
+                    exportCourseDuesCSV();
+                    break;
+                default:
+                    console.log(`Export for ${reportType} not implemented`);
+            }
+        }
+
+        // Helper functions for exports
+        function getCurrentDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function calculateFeeTotals(data) {
+            return data.reduce((totals, student) => ({
+                smpAlloted: totals.smpAlloted + (student['SMP Alloted'] || 0),
+                svkAlloted: totals.svkAlloted + (student['SVK Alloted'] || 0),
+                smpPaid: totals.smpPaid + (student['SMP Paid'] || 0),
+                svkPaid: totals.svkPaid + (student['SVK Paid'] || 0),
+                smpDue: totals.smpDue + (student['SMP Due'] || 0),
+                svkDue: totals.svkDue + (student['SVK Due'] || 0),
+                totalAlloted: totals.totalAlloted + (student['Total Alloted'] || 0),
+                totalPaid: totals.totalPaid + (student['Total Paid'] || 0),
+                totalDue: totals.totalDue + (student['Total Dues'] || 0)
+            }), {
+                smpAlloted: 0, svkAlloted: 0, smpPaid: 0, svkPaid: 0,
+                smpDue: 0, svkDue: 0, totalAlloted: 0, totalPaid: 0, totalDue: 0
+            });
+        }
+
+        function formatCurrency(amount) {
+            if (amount === 0) return '0';
+            return Math.round(amount).toLocaleString('en-IN');
+        }
+
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength - 3) + '...';
+        }
+
+        function createPDFTable(doc, headers, colWidths, startY, data, totalRow) {
+            let currentY = startY;
+            const pageHeight = 200; // Leave margin for footer
+            
+            // Table header
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.setFillColor(240, 240, 240);
+            doc.rect(10, currentY, colWidths.reduce((a, b) => a + b), 8, 'F');
+            
+            let xPos = 10;
+            headers.forEach((header, index) => {
+                doc.text(header, xPos + 1, currentY + 5);
+                xPos += colWidths[index];
+            });
+            currentY += 10;
+            
+            // Table data
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(7);
+            
+            data.forEach((row, rowIndex) => {
+                if (currentY > pageHeight) {
+                    doc.addPage();
+                    currentY = 20;
+                    
+                    // Repeat header on new page
+                    doc.setFont(undefined, 'bold');
+                    doc.setFillColor(240, 240, 240);
+                    doc.rect(10, currentY, colWidths.reduce((a, b) => a + b), 8, 'F');
+                    xPos = 10;
+                    headers.forEach((header, index) => {
+                        doc.text(header, xPos + 1, currentY + 5);
+                        xPos += colWidths[index];
+                    });
+                    currentY += 10;
+                    doc.setFont(undefined, 'normal');
+                }
+                
+                // Alternate row background
+                if (rowIndex % 2 === 0) {
+                    doc.setFillColor(250, 250, 250);
+                    doc.rect(10, currentY, colWidths.reduce((a, b) => a + b), 6, 'F');
+                }
+                
+                xPos = 10;
+                row.forEach((cell, cellIndex) => {
+                    const cellText = String(cell).substring(0, 15); // Prevent overflow
+                    doc.text(cellText, xPos + 1, currentY + 4);
+                    xPos += colWidths[cellIndex];
+                });
+                currentY += 6;
+            });
+            
+            // Total row
+            if (totalRow) {
+                currentY += 2;
+                doc.setFont(undefined, 'bold');
+                doc.setFillColor(67, 97, 238);
+                doc.rect(10, currentY, colWidths.reduce((a, b) => a + b), 8, 'F');
+                doc.setTextColor(255, 255, 255);
+                
+                xPos = 10;
+                (Array.isArray(totalRow) ? totalRow : [totalRow]).forEach((cell, cellIndex) => {
+                    const cellText = String(cell).substring(0, 15);
+                    doc.text(cellText, xPos + 1, currentY + 5);
+                    if (cellIndex < colWidths.length - 1) xPos += colWidths[cellIndex];
+                });
+                doc.setTextColor(0, 0, 0);
+            }
+            
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Page ${i} of ${pageCount} | Generated: ${getCurrentDate()} | SMP Admin System`, 148, 205, { align: 'center' });
+            }
+        }
+
+        // Theme management
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            const toggle = document.getElementById('themeToggle');
+            
+            if (isDark) {
+                body.removeAttribute('data-theme');
+                toggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                toggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const toggle = document.getElementById('themeToggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                toggle.textContent = '☀️';
+            } else {
+                toggle.textContent = '🌙';
+            }
+        }
+    </script>
+</body>
+</html>
