@@ -589,6 +589,8 @@
 
             .nav-container {
                 margin-bottom: 1.5rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .content-section {
@@ -615,11 +617,51 @@
                 justify-content: center;
             }
 
+            /* Enhanced mobile table scrolling */
+            .table-container {
+                overflow-x: auto !important;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+                width: 100%;
+                position: relative;
+            }
+
+            .table {
+                min-width: 800px !important; /* Force horizontal scroll on mobile */
+                width: max-content;
+            }
+
             .table th,
             .table td {
                 padding: 0.5rem 0.25rem;
-                font-size: 0.8rem;
-                max-width: 100px;
+                font-size: 0.75rem;
+                min-width: 60px;
+                max-width: none; /* Remove max-width restriction on mobile */
+                white-space: nowrap;
+            }
+
+            /* Specific widths for different columns on mobile */
+            .table th:nth-child(1), .table td:nth-child(1) { min-width: 40px; } /* S.No */
+            .table th:nth-child(2), .table td:nth-child(2) { min-width: 120px; } /* Student Name */
+            .table th:nth-child(3), .table td:nth-child(3) { min-width: 120px; } /* Father Name */
+            .table th:nth-child(4), .table td:nth-child(4) { min-width: 60px; } /* Year */
+            .table th:nth-child(5), .table td:nth-child(5) { min-width: 80px; } /* Course */
+            .table th:nth-child(6), .table td:nth-child(6) { min-width: 100px; } /* Reg No */
+
+            /* Add scroll indicator */
+            .table-container::after {
+                content: '← Scroll horizontally →';
+                position: sticky;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: var(--bg-secondary);
+                text-align: center;
+                padding: 0.5rem;
+                font-size: 0.7rem;
+                color: var(--text-secondary);
+                border-top: 1px solid var(--border);
+                z-index: 5;
             }
 
             .theme-toggle {
@@ -1758,7 +1800,7 @@
             doc.text(filters, 148, 22, { align: 'center' });
 
             const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
-            const colWidths = [15, 45, 45, 20, 25, 30, 20, 20];
+            const colWidths = [12, 55, 55, 18, 22, 28, 18, 18]; // Increased student and father name columns
             
             createPDFTable(doc, headers, colWidths, 30, filtered.map((student, index) => [
                 (index + 1).toString(),
@@ -1821,12 +1863,12 @@
             doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
 
             const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
-            const colWidths = [12, 35, 35, 15, 20, 25, 15, 15, 20, 20, 15];
+            const colWidths = [10, 45, 45, 15, 18, 22, 12, 12, 18, 18, 12]; // Increased student and father name columns
             
             createPDFTable(doc, headers, colWidths, 30, courseData.map((student, index) => [
                 (index + 1).toString(),
-                truncateText(student['Student Name'] || '', 15),
-                truncateText(student['Father Name'] || '', 15),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
                 student['Year'] || '',
                 student['Course'] || '',
                 student['Reg No'] || '',
@@ -1895,12 +1937,12 @@
             doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
 
             const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D'];
-            const colWidths = [12, 25, 25, 10, 15, 18, 12, 15, 15, 15, 15, 15, 15, 18, 18, 18];
+            const colWidths = [10, 32, 32, 10, 14, 16, 10, 14, 14, 14, 14, 14, 14, 16, 16, 16]; // Increased student and father name columns
             
             const tableData = courseData.map((student, index) => [
                 (index + 1).toString(),
-                truncateText(student['Student Name'] || '', 12),
-                truncateText(student['Father Name'] || '', 12),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
                 student['Year'] || '',
                 student['Course'] || '',
                 student['Reg No'] || '',
@@ -1984,12 +2026,12 @@
             doc.text(`Records: ${dueStudents.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
 
             const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D', 'Rec'];
-            const colWidths = [10, 22, 22, 10, 12, 16, 10, 14, 14, 14, 14, 14, 14, 16, 16, 16, 10];
+            const colWidths = [8, 28, 28, 8, 12, 14, 8, 13, 13, 13, 13, 13, 13, 15, 15, 15, 8]; // Increased student and father name columns
             
             const tableData = dueStudents.map((student, index) => [
                 (index + 1).toString(),
-                truncateText(student['Student Name'] || '', 10),
-                truncateText(student['Father Name'] || '', 10),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
                 student['Year'] || '',
                 student['Course'] || '',
                 student['Reg No'] || '',
@@ -2616,7 +2658,24 @@
                 
                 xPos = 10;
                 row.forEach((cell, cellIndex) => {
-                    const cellText = String(cell).substring(0, 15); // Prevent overflow
+                    let cellText = String(cell);
+                    
+                    // Smart truncation based on column width and content type
+                    const colWidth = colWidths[cellIndex];
+                    let maxLength;
+                    
+                    if (colWidth >= 40) { // Large columns (like names)
+                        maxLength = Math.floor(colWidth * 0.8); // More generous for names
+                    } else if (colWidth >= 20) { // Medium columns
+                        maxLength = Math.floor(colWidth * 0.7);
+                    } else { // Small columns
+                        maxLength = Math.floor(colWidth * 0.6);
+                    }
+                    
+                    if (cellText.length > maxLength) {
+                        cellText = cellText.substring(0, maxLength - 3) + '...';
+                    }
+                    
                     doc.text(cellText, xPos + 1, currentY + 4);
                     xPos += colWidths[cellIndex];
                 });
@@ -2633,7 +2692,14 @@
                 
                 xPos = 10;
                 (Array.isArray(totalRow) ? totalRow : [totalRow]).forEach((cell, cellIndex) => {
-                    const cellText = String(cell).substring(0, 15);
+                    let cellText = String(cell);
+                    const colWidth = colWidths[cellIndex] || colWidths[colWidths.length - 1];
+                    const maxLength = Math.floor(colWidth * 0.7);
+                    
+                    if (cellText.length > maxLength) {
+                        cellText = cellText.substring(0, maxLength - 3) + '...';
+                    }
+                    
                     doc.text(cellText, xPos + 1, currentY + 5);
                     if (cellIndex < colWidths.length - 1) xPos += colWidths[cellIndex];
                 });
