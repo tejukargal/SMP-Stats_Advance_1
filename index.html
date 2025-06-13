@@ -3007,10 +3007,12 @@
 
         function createPDFTable(doc, headers, colWidths, startY, data, totalRow) {
             let currentY = startY;
-            const pageHeight = 200; // Leave margin for footer
             
             // Determine orientation based on number of columns
             const isPortrait = headers.length < 9;
+            
+            // Set page height based on orientation - more space for portrait
+            const pageHeight = isPortrait ? 270 : 200; // Portrait: 270mm, Landscape: 200mm
             
             // Table header
             doc.setFontSize(8);
