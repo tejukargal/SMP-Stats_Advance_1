@@ -484,7 +484,7 @@
             flex-wrap: wrap;
         }
 
-        /* Tables */
+        /* Tables - Enhanced for horizontal navigation on all screens */
         .table-container {
             background: var(--bg-primary);
             border-radius: var(--radius);
@@ -492,12 +492,16 @@
             border: 1px solid var(--border);
             max-height: 500px;
             overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
         }
 
         .table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
+            min-width: max-content; /* Force table to be wide enough for content */
         }
 
         .table th,
@@ -508,7 +512,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 150px;
+            min-width: 80px; /* Ensure minimum column width */
         }
 
         .table th {
@@ -549,6 +553,28 @@
             font-weight: 600;
         }
 
+        /* Enhanced scroll indicator for all screens */
+        .table-container::after {
+            content: '← Scroll horizontally for more data →';
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            z-index: 5;
+            opacity: 0.8;
+        }
+
+        /* Hide scroll indicator when table is fully visible */
+        .table-container.no-scroll::after {
+            display: none;
+        }
+
         /* Theme Toggle */
         .theme-toggle {
             position: fixed;
@@ -570,6 +596,27 @@
         .theme-toggle:hover {
             transform: scale(1.1);
         }
+
+        /* Enhanced table headers for fee tables */
+        .table th:nth-child(1) { min-width: 50px; } /* S.No */
+        .table th:nth-child(2) { min-width: 120px; } /* Student Name */
+        .table th:nth-child(3) { min-width: 120px; } /* Father Name */
+        .table th:nth-child(4) { min-width: 60px; } /* Year */
+        .table th:nth-child(5) { min-width: 80px; } /* Course */
+        .table th:nth-child(6) { min-width: 100px; } /* Reg No */
+
+        /* Fee table specific widths */
+        .fee-table th:nth-child(7) { min-width: 80px; } /* Category */
+        .fee-table th:nth-child(8) { min-width: 100px; } /* SMP Alloted */
+        .fee-table th:nth-child(9) { min-width: 100px; } /* SVK Alloted */
+        .fee-table th:nth-child(10) { min-width: 100px; } /* SMP Paid */
+        .fee-table th:nth-child(11) { min-width: 100px; } /* SVK Paid */
+        .fee-table th:nth-child(12) { min-width: 100px; } /* SMP Due */
+        .fee-table th:nth-child(13) { min-width: 100px; } /* SVK Due */
+        .fee-table th:nth-child(14) { min-width: 120px; } /* Total Alloted */
+        .fee-table th:nth-child(15) { min-width: 120px; } /* Total Paid */
+        .fee-table th:nth-child(16) { min-width: 120px; } /* Total Due */
+        .fee-table th:nth-child(17) { min-width: 80px; } /* Status */
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -617,51 +664,10 @@
                 justify-content: center;
             }
 
-            /* Enhanced mobile table scrolling */
-            .table-container {
-                overflow-x: auto !important;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                width: 100%;
-                position: relative;
-            }
-
-            .table {
-                min-width: 800px !important; /* Force horizontal scroll on mobile */
-                width: max-content;
-            }
-
             .table th,
             .table td {
                 padding: 0.5rem 0.25rem;
                 font-size: 0.75rem;
-                min-width: 60px;
-                max-width: none; /* Remove max-width restriction on mobile */
-                white-space: nowrap;
-            }
-
-            /* Specific widths for different columns on mobile */
-            .table th:nth-child(1), .table td:nth-child(1) { min-width: 40px; } /* S.No */
-            .table th:nth-child(2), .table td:nth-child(2) { min-width: 120px; } /* Student Name */
-            .table th:nth-child(3), .table td:nth-child(3) { min-width: 120px; } /* Father Name */
-            .table th:nth-child(4), .table td:nth-child(4) { min-width: 60px; } /* Year */
-            .table th:nth-child(5), .table td:nth-child(5) { min-width: 80px; } /* Course */
-            .table th:nth-child(6), .table td:nth-child(6) { min-width: 100px; } /* Reg No */
-
-            /* Add scroll indicator */
-            .table-container::after {
-                content: '← Scroll horizontally →';
-                position: sticky;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: var(--bg-secondary);
-                text-align: center;
-                padding: 0.5rem;
-                font-size: 0.7rem;
-                color: var(--text-secondary);
-                border-top: 1px solid var(--border);
-                z-index: 5;
             }
 
             .theme-toggle {
@@ -744,6 +750,15 @@
 
                 <div class="content-section">
                     <h2 class="section-title">📋 Year & Course Distribution</h2>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Export Options</label>
+                            <div class="btn-grid">
+                                <button class="btn btn-success" onclick="exportSummaryTableCSV()">📥 Export CSV</button>
+                                <button class="btn btn-warning" onclick="exportSummaryTablePDF()">📄 Export PDF</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="table-container">
                         <table class="table" id="summaryTable">
                             <thead>
@@ -755,6 +770,38 @@
                                     <th>CS</th>
                                     <th>EE</th>
                                     <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- New Fee Distribution Table -->
+                <div class="content-section">
+                    <h2 class="section-title">💰 Year & Course wise Fee Distribution (Regular Students)</h2>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Export Options</label>
+                            <div class="btn-grid">
+                                <button class="btn btn-success" onclick="exportFeeDistributionCSV()">📥 Export CSV</button>
+                                <button class="btn btn-warning" onclick="exportFeeDistributionPDF()">📄 Export PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="table fee-table" id="feeDistributionTable">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Course</th>
+                                    <th>Students</th>
+                                    <th>Total Alloted</th>
+                                    <th>Total Paid</th>
+                                    <th>Total Dues</th>
+                                    <th>Collection %</th>
+                                    <th>Students Paid</th>
+                                    <th>Students Due</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -854,7 +901,7 @@
                     </div>
 
                     <div class="table-container">
-                        <table class="table" id="feesTable">
+                        <table class="table fee-table" id="feesTable">
                             <thead>
                                 <tr>
                                     <th>S.No</th>
@@ -1196,6 +1243,7 @@
             generateMetrics();
             generateOverviewStats();
             generateSummaryTable();
+            generateFeeDistributionTable();
             populateFilters();
             updateStudentsList();
             updateFeesList();
@@ -1322,6 +1370,106 @@
                 <td><strong>${grandTotals.CS}</strong></td>
                 <td><strong>${grandTotals.EE}</strong></td>
                 <td><strong>${grandTotals.total}</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        // New function to generate fee distribution table
+        function generateFeeDistributionTable() {
+            const tbody = document.querySelector('#feeDistributionTable tbody');
+            tbody.innerHTML = '';
+
+            // Group by year and course with fee details
+            const feeDistribution = {};
+            
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                const key = `${year}_${course}`;
+                
+                if (!feeDistribution[key]) {
+                    feeDistribution[key] = {
+                        year: year,
+                        course: course,
+                        students: 0,
+                        totalAlloted: 0,
+                        totalPaid: 0,
+                        totalDues: 0,
+                        studentsPaid: 0,
+                        studentsDue: 0
+                    };
+                }
+                
+                const data = feeDistribution[key];
+                data.students++;
+                data.totalAlloted += student['Total Alloted'] || 0;
+                data.totalPaid += student['Total Paid'] || 0;
+                data.totalDues += student['Total Dues'] || 0;
+                
+                if ((student['Total Dues'] || 0) === 0) {
+                    data.studentsPaid++;
+                } else {
+                    data.studentsDue++;
+                }
+            });
+
+            // Sort by year and course
+            const sortedData = Object.values(feeDistribution).sort((a, b) => {
+                const yearCompare = a.year.localeCompare(b.year);
+                if (yearCompare !== 0) return yearCompare;
+                return a.course.localeCompare(b.course);
+            });
+
+            // Generate table rows
+            const grandTotals = {
+                students: 0,
+                totalAlloted: 0,
+                totalPaid: 0,
+                totalDues: 0,
+                studentsPaid: 0,
+                studentsDue: 0
+            };
+
+            sortedData.forEach(data => {
+                const collectionRate = data.totalAlloted > 0 ? 
+                    ((data.totalPaid / data.totalAlloted) * 100).toFixed(1) : '0.0';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${data.year}</strong></td>
+                    <td><strong>${data.course}</strong></td>
+                    <td>${data.students}</td>
+                    <td class="amount">₹${data.totalAlloted.toLocaleString('en-IN')}</td>
+                    <td class="amount">₹${data.totalPaid.toLocaleString('en-IN')}</td>
+                    <td class="${data.totalDues > 0 ? 'due' : 'amount'}">₹${data.totalDues.toLocaleString('en-IN')}</td>
+                    <td><strong>${collectionRate}%</strong></td>
+                    <td class="status-paid">${data.studentsPaid}</td>
+                    <td class="${data.studentsDue > 0 ? 'status-pending' : 'status-paid'}">${data.studentsDue}</td>
+                `;
+                tbody.appendChild(row);
+
+                // Add to grand totals
+                Object.keys(grandTotals).forEach(key => {
+                    grandTotals[key] += data[key];
+                });
+            });
+
+            // Grand total row
+            const grandCollectionRate = grandTotals.totalAlloted > 0 ? 
+                ((grandTotals.totalPaid / grandTotals.totalAlloted) * 100).toFixed(1) : '0.0';
+                
+            const totalRow = document.createElement('tr');
+            totalRow.style.background = 'var(--primary)';
+            totalRow.style.color = 'white';
+            totalRow.innerHTML = `
+                <td colspan="2"><strong>GRAND TOTAL</strong></td>
+                <td><strong>${grandTotals.students}</strong></td>
+                <td style="color: white;"><strong>₹${grandTotals.totalAlloted.toLocaleString('en-IN')}</strong></td>
+                <td style="color: white;"><strong>₹${grandTotals.totalPaid.toLocaleString('en-IN')}</strong></td>
+                <td style="color: white;"><strong>₹${grandTotals.totalDues.toLocaleString('en-IN')}</strong></td>
+                <td style="color: white;"><strong>${grandCollectionRate}%</strong></td>
+                <td style="color: white;"><strong>${grandTotals.studentsPaid}</strong></td>
+                <td style="color: white;"><strong>${grandTotals.studentsDue}</strong></td>
             `;
             tbody.appendChild(totalRow);
         }
@@ -1576,7 +1724,7 @@
                 </div>
                 
                 <div class="table-container">
-                    <table class="table">
+                    <table class="table fee-table">
                         <thead>
                             <tr>
                                 <th>S.No</th>
@@ -1669,7 +1817,7 @@
                 </div>
                 
                 <div class="table-container">
-                    <table class="table">
+                    <table class="table fee-table">
                         <thead>
                             <tr>
                                 <th>S.No</th>
@@ -1730,334 +1878,6 @@
                     </table>
                 </div>
             `;
-        }
-
-        // Individual Course Export Functions
-        function exportCourseStudentsCSV() {
-            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
-            const yearFilter = document.getElementById('courseYearFilter').value;
-            
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-            
-            const filtered = courseData.filter(student => {
-                const matchesName = !nameFilter || 
-                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
-                    student['Father Name']?.toLowerCase().includes(nameFilter);
-                const matchesYear = !yearFilter || student['Year'] === yearFilter;
-                return matchesName && matchesYear;
-            });
-
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
-            
-            const csvContent = [
-                headers.join(','),
-                ...filtered.map((student, index) => [
-                    index + 1,
-                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
-                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
-                    `"${student['Year'] || ''}"`,
-                    `"${student['Course'] || ''}"`,
-                    `"${student['Reg No'] || ''}"`,
-                    `"${student['Cat'] || ''}"`,
-                    `"${student['In/Out'] || ''}"`
-                ].join(',')),
-                `"Total Students: ${filtered.length}","","","","","","",""`
-            ].join('\n');
-            
-            downloadCSV(csvContent, `${courseTitle}_Students_${getCurrentDate()}.csv`);
-        }
-
-        function exportCourseStudentsPDF() {
-            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
-            const yearFilter = document.getElementById('courseYearFilter').value;
-            
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-            
-            const filtered = courseData.filter(student => {
-                const matchesName = !nameFilter || 
-                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
-                    student['Father Name']?.toLowerCase().includes(nameFilter);
-                const matchesYear = !yearFilter || student['Year'] === yearFilter;
-                return matchesName && matchesYear;
-            });
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
-            
-            doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${courseTitle} - Students Report`, 148, 15, { align: 'center' });
-            
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            const filters = `Year: ${yearFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
-            doc.text(filters, 148, 22, { align: 'center' });
-
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
-            const colWidths = [12, 55, 55, 18, 22, 28, 18, 18]; // Increased student and father name columns
-            
-            createPDFTable(doc, headers, colWidths, 30, filtered.map((student, index) => [
-                (index + 1).toString(),
-                student['Student Name'] || '',
-                student['Father Name'] || '',
-                student['Year'] || '',
-                student['Course'] || '',
-                student['Reg No'] || '',
-                student['Cat'] || '',
-                student['In/Out'] || ''
-            ]), `Total Students: ${filtered.length}`);
-
-            doc.save(`${appState.currentCourse}_Students_${getCurrentDate()}.pdf`);
-        }
-
-        function exportCourseAcademicCSV() {
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
-            
-            const csvContent = [
-                headers.join(','),
-                ...courseData.map((student, index) => [
-                    index + 1,
-                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
-                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
-                    `"${student['Year'] || ''}"`,
-                    `"${student['Course'] || ''}"`,
-                    `"${student['Reg No'] || ''}"`,
-                    `"${student['Cat'] || ''}"`,
-                    `"${student['Adm'] || ''}"`,
-                    `"${student['Adm Cat'] || ''}"`,
-                    `"${student['Date'] || ''}"`,
-                    `"${student['Rpt'] || ''}"`
-                ].join(',')),
-                `"Total Students: ${courseData.length}","","","","","","","","","",""`
-            ].join('\n');
-            
-            downloadCSV(csvContent, `${courseTitle}_Academic_${getCurrentDate()}.csv`);
-        }
-
-        function exportCourseAcademicPDF() {
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
-            
-            doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${courseTitle} - Academic Report`, 148, 15, { align: 'center' });
-            
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
-
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
-            const colWidths = [10, 45, 45, 15, 18, 22, 12, 12, 18, 18, 12]; // Increased student and father name columns
-            
-            createPDFTable(doc, headers, colWidths, 30, courseData.map((student, index) => [
-                (index + 1).toString(),
-                student['Student Name'] || '',
-                student['Father Name'] || '',
-                student['Year'] || '',
-                student['Course'] || '',
-                student['Reg No'] || '',
-                student['Cat'] || '',
-                student['Adm'] || '',
-                student['Adm Cat'] || '',
-                student['Date'] || '',
-                student['Rpt'] || ''
-            ]), `Total Students: ${courseData.length}`);
-
-            doc.save(`${appState.currentCourse}_Academic_${getCurrentDate()}.pdf`);
-        }
-
-        function exportCourseFeesCSV() {
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-
-            const totals = calculateFeeTotals(courseData);
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
-                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
-                           'Total Alloted', 'Total Paid', 'Total Due'];
-            
-            const csvContent = [
-                headers.join(','),
-                ...courseData.map((student, index) => [
-                    index + 1,
-                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
-                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
-                    `"${student['Year'] || ''}"`,
-                    `"${student['Course'] || ''}"`,
-                    `"${student['Reg No'] || ''}"`,
-                    `"${student['Cat'] || ''}"`,
-                    student['SMP Alloted'] || 0,
-                    student['SVK Alloted'] || 0,
-                    student['SMP Paid'] || 0,
-                    student['SVK Paid'] || 0,
-                    student['SMP Due'] || 0,
-                    student['SVK Due'] || 0,
-                    student['Total Alloted'] || 0,
-                    student['Total Paid'] || 0,
-                    student['Total Dues'] || 0
-                ].join(',')),
-                `"Total (${courseData.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue}`
-            ].join('\n');
-            
-            downloadCSV(csvContent, `${courseTitle}_Fees_${getCurrentDate()}.csv`);
-        }
-
-        function exportCourseFeesPDF() {
-            const courseData = appState.currentCourse === 'ALL' ? 
-                appState.consolidatedStudents : 
-                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
-            
-            doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${courseTitle} - Fees Report`, 148, 15, { align: 'center' });
-            
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
-
-            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D'];
-            const colWidths = [10, 32, 32, 10, 14, 16, 10, 14, 14, 14, 14, 14, 14, 16, 16, 16]; // Increased student and father name columns
-            
-            const tableData = courseData.map((student, index) => [
-                (index + 1).toString(),
-                student['Student Name'] || '',
-                student['Father Name'] || '',
-                student['Year'] || '',
-                student['Course'] || '',
-                student['Reg No'] || '',
-                student['Cat'] || '',
-                formatCurrency(student['SMP Alloted'] || 0),
-                formatCurrency(student['SVK Alloted'] || 0),
-                formatCurrency(student['SMP Paid'] || 0),
-                formatCurrency(student['SVK Paid'] || 0),
-                formatCurrency(student['SMP Due'] || 0),
-                formatCurrency(student['SVK Due'] || 0),
-                formatCurrency(student['Total Alloted'] || 0),
-                formatCurrency(student['Total Paid'] || 0),
-                formatCurrency(student['Total Dues'] || 0)
-            ]);
-
-            const totals = calculateFeeTotals(courseData);
-            const totalRow = [`Total (${courseData.length})`, '', '', '', '', '', '', 
-                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
-                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
-                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
-                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
-                           formatCurrency(totals.totalDue)];
-
-            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
-            doc.save(`${appState.currentCourse}_Fees_${getCurrentDate()}.pdf`);
-        }
-
-        function exportCourseDuesCSV() {
-            const dueStudents = appState.currentCourse === 'ALL' ? 
-                appState.duesData : 
-                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
-
-            const totals = calculateFeeTotals(dueStudents);
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
-            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
-                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
-                           'Total Alloted', 'Total Paid', 'Total Due', 'Payment Records'];
-            
-            const csvContent = [
-                headers.join(','),
-                ...dueStudents.map((student, index) => [
-                    index + 1,
-                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
-                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
-                    `"${student['Year'] || ''}"`,
-                    `"${student['Course'] || ''}"`,
-                    `"${student['Reg No'] || ''}"`,
-                    `"${student['Cat'] || ''}"`,
-                    student['SMP Alloted'] || 0,
-                    student['SVK Alloted'] || 0,
-                    student['SMP Paid'] || 0,
-                    student['SVK Paid'] || 0,
-                    student['SMP Due'] || 0,
-                    student['SVK Due'] || 0,
-                    student['Total Alloted'] || 0,
-                    student['Total Paid'] || 0,
-                    student['Total Dues'] || 0,
-                    student['Payment Records'] || 1
-                ].join(',')),
-                `"Total (${dueStudents.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue},""`
-            ].join('\n');
-            
-            downloadCSV(csvContent, `${courseTitle}_Dues_${getCurrentDate()}.csv`);
-        }
-
-        function exportCourseDuesPDF() {
-            const dueStudents = appState.currentCourse === 'ALL' ? 
-                appState.duesData : 
-                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
-            
-            doc.setFontSize(14);
-            doc.setFont(undefined, 'bold');
-            doc.text(`${courseTitle} - Dues Report`, 148, 15, { align: 'center' });
-            
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'normal');
-            doc.text(`Records: ${dueStudents.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
-
-            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D', 'Rec'];
-            const colWidths = [8, 28, 28, 8, 12, 14, 8, 13, 13, 13, 13, 13, 13, 15, 15, 15, 8]; // Increased student and father name columns
-            
-            const tableData = dueStudents.map((student, index) => [
-                (index + 1).toString(),
-                student['Student Name'] || '',
-                student['Father Name'] || '',
-                student['Year'] || '',
-                student['Course'] || '',
-                student['Reg No'] || '',
-                student['Cat'] || '',
-                formatCurrency(student['SMP Alloted'] || 0),
-                formatCurrency(student['SVK Alloted'] || 0),
-                formatCurrency(student['SMP Paid'] || 0),
-                formatCurrency(student['SVK Paid'] || 0),
-                formatCurrency(student['SMP Due'] || 0),
-                formatCurrency(student['SVK Due'] || 0),
-                formatCurrency(student['Total Alloted'] || 0),
-                formatCurrency(student['Total Paid'] || 0),
-                formatCurrency(student['Total Dues'] || 0),
-                (student['Payment Records'] || 1).toString()
-            ]);
-
-            const totals = calculateFeeTotals(dueStudents);
-            const totalRow = [`Tot (${dueStudents.length})`, '', '', '', '', '', '', 
-                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
-                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
-                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
-                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
-                           formatCurrency(totals.totalDue), '-'];
-
-            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
-            doc.save(`${appState.currentCourse}_Dues_${getCurrentDate()}.pdf`);
         }
 
         // Student List Functions
@@ -2338,6 +2158,272 @@
             displayCourseStudents(courseData);
         }
 
+        // Dashboard Export Functions
+        function exportSummaryTableCSV() {
+            // Get summary data
+            const yearSummary = {};
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                
+                if (!yearSummary[year]) {
+                    yearSummary[year] = { CE: 0, ME: 0, EC: 0, CS: 0, EE: 0, total: 0 };
+                }
+                
+                if (yearSummary[year][course] !== undefined) {
+                    yearSummary[year][course]++;
+                    yearSummary[year].total++;
+                }
+            });
+
+            const headers = ['Year', 'CE', 'ME', 'EC', 'CS', 'EE', 'Total'];
+            const csvContent = [
+                headers.join(','),
+                ...Object.entries(yearSummary).map(([year, courses]) => [
+                    `"${year}"`,
+                    courses.CE,
+                    courses.ME,
+                    courses.EC,
+                    courses.CS,
+                    courses.EE,
+                    courses.total
+                ].join(',')),
+                // Grand total
+                `"TOTAL",${Object.values(yearSummary).reduce((sum, c) => sum + c.CE, 0)},${Object.values(yearSummary).reduce((sum, c) => sum + c.ME, 0)},${Object.values(yearSummary).reduce((sum, c) => sum + c.EC, 0)},${Object.values(yearSummary).reduce((sum, c) => sum + c.CS, 0)},${Object.values(yearSummary).reduce((sum, c) => sum + c.EE, 0)},${Object.values(yearSummary).reduce((sum, c) => sum + c.total, 0)}`
+            ].join('\n');
+
+            downloadCSV(csvContent, `Year_Course_Distribution_${getCurrentDate()}.csv`);
+        }
+
+        function exportSummaryTablePDF() {
+            // Get summary data
+            const yearSummary = {};
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                
+                if (!yearSummary[year]) {
+                    yearSummary[year] = { CE: 0, ME: 0, EC: 0, CS: 0, EE: 0, total: 0 };
+                }
+                
+                if (yearSummary[year][course] !== undefined) {
+                    yearSummary[year][course]++;
+                    yearSummary[year].total++;
+                }
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait orientation for 7 columns
+            
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text('Year & Course Distribution', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Generated: ${getCurrentDate()} | Total Students: ${appState.consolidatedStudents.length}`, 105, 28, { align: 'center' });
+
+            const headers = ['Year', 'CE', 'ME', 'EC', 'CS', 'EE', 'Total'];
+            const colWidths = [25, 20, 20, 20, 20, 20, 25];
+            
+            const tableData = Object.entries(yearSummary).map(([year, courses]) => [
+                year,
+                courses.CE.toString(),
+                courses.ME.toString(),
+                courses.EC.toString(),
+                courses.CS.toString(),
+                courses.EE.toString(),
+                courses.total.toString()
+            ]);
+
+            const grandTotals = Object.values(yearSummary).reduce((totals, courses) => ({
+                CE: totals.CE + courses.CE,
+                ME: totals.ME + courses.ME,
+                EC: totals.EC + courses.EC,
+                CS: totals.CS + courses.CS,
+                EE: totals.EE + courses.EE,
+                total: totals.total + courses.total
+            }), { CE: 0, ME: 0, EC: 0, CS: 0, EE: 0, total: 0 });
+
+            const totalRow = ['TOTAL', grandTotals.CE.toString(), grandTotals.ME.toString(), grandTotals.EC.toString(), grandTotals.CS.toString(), grandTotals.EE.toString(), grandTotals.total.toString()];
+
+            createPDFTable(doc, headers, colWidths, 40, tableData, totalRow);
+            doc.save(`Year_Course_Distribution_${getCurrentDate()}.pdf`);
+        }
+
+        function exportFeeDistributionCSV() {
+            // Get fee distribution data
+            const feeDistribution = {};
+            
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                const key = `${year}_${course}`;
+                
+                if (!feeDistribution[key]) {
+                    feeDistribution[key] = {
+                        year: year,
+                        course: course,
+                        students: 0,
+                        totalAlloted: 0,
+                        totalPaid: 0,
+                        totalDues: 0,
+                        studentsPaid: 0,
+                        studentsDue: 0
+                    };
+                }
+                
+                const data = feeDistribution[key];
+                data.students++;
+                data.totalAlloted += student['Total Alloted'] || 0;
+                data.totalPaid += student['Total Paid'] || 0;
+                data.totalDues += student['Total Dues'] || 0;
+                
+                if ((student['Total Dues'] || 0) === 0) {
+                    data.studentsPaid++;
+                } else {
+                    data.studentsDue++;
+                }
+            });
+
+            const sortedData = Object.values(feeDistribution).sort((a, b) => {
+                const yearCompare = a.year.localeCompare(b.year);
+                if (yearCompare !== 0) return yearCompare;
+                return a.course.localeCompare(b.course);
+            });
+
+            const headers = ['Year', 'Course', 'Students', 'Total Alloted', 'Total Paid', 'Total Dues', 'Collection %', 'Students Paid', 'Students Due'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...sortedData.map(data => {
+                    const collectionRate = data.totalAlloted > 0 ? 
+                        ((data.totalPaid / data.totalAlloted) * 100).toFixed(1) : '0.0';
+                    return [
+                        `"${data.year}"`,
+                        `"${data.course}"`,
+                        data.students,
+                        data.totalAlloted,
+                        data.totalPaid,
+                        data.totalDues,
+                        `"${collectionRate}%"`,
+                        data.studentsPaid,
+                        data.studentsDue
+                    ].join(',');
+                }),
+                // Grand total
+                (() => {
+                    const grandTotals = sortedData.reduce((totals, data) => ({
+                        students: totals.students + data.students,
+                        totalAlloted: totals.totalAlloted + data.totalAlloted,
+                        totalPaid: totals.totalPaid + data.totalPaid,
+                        totalDues: totals.totalDues + data.totalDues,
+                        studentsPaid: totals.studentsPaid + data.studentsPaid,
+                        studentsDue: totals.studentsDue + data.studentsDue
+                    }), { students: 0, totalAlloted: 0, totalPaid: 0, totalDues: 0, studentsPaid: 0, studentsDue: 0 });
+
+                    const grandCollectionRate = grandTotals.totalAlloted > 0 ? 
+                        ((grandTotals.totalPaid / grandTotals.totalAlloted) * 100).toFixed(1) : '0.0';
+
+                    return `"GRAND TOTAL","",${grandTotals.students},${grandTotals.totalAlloted},${grandTotals.totalPaid},${grandTotals.totalDues},"${grandCollectionRate}%",${grandTotals.studentsPaid},${grandTotals.studentsDue}`;
+                })()
+            ].join('\n');
+
+            downloadCSV(csvContent, `Fee_Distribution_${getCurrentDate()}.csv`);
+        }
+
+        function exportFeeDistributionPDF() {
+            // Get fee distribution data
+            const feeDistribution = {};
+            
+            appState.consolidatedStudents.forEach(student => {
+                const year = student['Year'] || 'Unknown';
+                const course = student['Course'] || 'Unknown';
+                const key = `${year}_${course}`;
+                
+                if (!feeDistribution[key]) {
+                    feeDistribution[key] = {
+                        year: year,
+                        course: course,
+                        students: 0,
+                        totalAlloted: 0,
+                        totalPaid: 0,
+                        totalDues: 0,
+                        studentsPaid: 0,
+                        studentsDue: 0
+                    };
+                }
+                
+                const data = feeDistribution[key];
+                data.students++;
+                data.totalAlloted += student['Total Alloted'] || 0;
+                data.totalPaid += student['Total Paid'] || 0;
+                data.totalDues += student['Total Dues'] || 0;
+                
+                if ((student['Total Dues'] || 0) === 0) {
+                    data.studentsPaid++;
+                } else {
+                    data.studentsDue++;
+                }
+            });
+
+            const sortedData = Object.values(feeDistribution).sort((a, b) => {
+                const yearCompare = a.year.localeCompare(b.year);
+                if (yearCompare !== 0) return yearCompare;
+                return a.course.localeCompare(b.course);
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait orientation for 9 columns
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Year & Course wise Fee Distribution', 105, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Regular Students | Generated: ${getCurrentDate()}`, 105, 22, { align: 'center' });
+
+            const headers = ['Year', 'Course', 'Students', 'Tot Alloted', 'Tot Paid', 'Tot Dues', 'Coll %', 'Paid', 'Due'];
+            const colWidths = [18, 20, 18, 24, 24, 24, 16, 16, 16];
+            
+            const tableData = sortedData.map(data => {
+                const collectionRate = data.totalAlloted > 0 ? 
+                    ((data.totalPaid / data.totalAlloted) * 100).toFixed(1) : '0.0';
+                return [
+                    data.year,
+                    data.course,
+                    data.students.toString(),
+                    formatCurrency(data.totalAlloted),
+                    formatCurrency(data.totalPaid),
+                    formatCurrency(data.totalDues),
+                    `${collectionRate}%`,
+                    data.studentsPaid.toString(),
+                    data.studentsDue.toString()
+                ];
+            });
+
+            const grandTotals = sortedData.reduce((totals, data) => ({
+                students: totals.students + data.students,
+                totalAlloted: totals.totalAlloted + data.totalAlloted,
+                totalPaid: totals.totalPaid + data.totalPaid,
+                totalDues: totals.totalDues + data.totalDues,
+                studentsPaid: totals.studentsPaid + data.studentsPaid,
+                studentsDue: totals.studentsDue + data.studentsDue
+            }), { students: 0, totalAlloted: 0, totalPaid: 0, totalDues: 0, studentsPaid: 0, studentsDue: 0 });
+
+            const grandCollectionRate = grandTotals.totalAlloted > 0 ? 
+                ((grandTotals.totalPaid / grandTotals.totalAlloted) * 100).toFixed(1) : '0.0';
+
+            const totalRow = ['TOTAL', '', grandTotals.students.toString(), 
+                           formatCurrency(grandTotals.totalAlloted), formatCurrency(grandTotals.totalPaid),
+                           formatCurrency(grandTotals.totalDues), `${grandCollectionRate}%`,
+                           grandTotals.studentsPaid.toString(), grandTotals.studentsDue.toString()];
+
+            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
+            doc.save(`Fee_Distribution_${getCurrentDate()}.pdf`);
+        }
+
         // Export functions
         function exportStudentsCSV() {
             const courseFilter = document.getElementById('studentCourseFilter').value;
@@ -2387,17 +2473,17 @@
             });
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait for 7 columns
             
             // Compact header
             doc.setFontSize(14);
             doc.setFont(undefined, 'bold');
-            doc.text('SMP Student List', 148, 15, { align: 'center' });
+            doc.text('SMP Student List', 105, 15, { align: 'center' });
             
             doc.setFontSize(9);
             doc.setFont(undefined, 'normal');
             const filters = `Course: ${courseFilter || 'All'} | Year: ${yearFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
-            doc.text(filters, 148, 22, { align: 'center' });
+            doc.text(filters, 105, 22, { align: 'center' });
 
             // Table
             const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Status'];
@@ -2489,7 +2575,7 @@
             });
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for 17 columns
             
             // Compact header
             doc.setFontSize(14);
@@ -2540,6 +2626,334 @@
 
             createPDFTable(doc, headers, colWidths, startY, tableData, totalRow);
             doc.save(`Fee_Management_${getCurrentDate()}.pdf`);
+        }
+
+        // Individual Course Export Functions
+        function exportCourseStudentsCSV() {
+            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
+            const yearFilter = document.getElementById('courseYearFilter').value;
+            
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            const filtered = courseData.filter(student => {
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                return matchesName && matchesYear;
+            });
+
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...filtered.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    `"${student['In/Out'] || ''}"`
+                ].join(',')),
+                `"Total Students: ${filtered.length}","","","","","","",""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Students_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseStudentsPDF() {
+            const nameFilter = document.getElementById('courseStudentFilter').value.toLowerCase();
+            const yearFilter = document.getElementById('courseYearFilter').value;
+            
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+            
+            const filtered = courseData.filter(student => {
+                const matchesName = !nameFilter || 
+                    student['Student Name']?.toLowerCase().includes(nameFilter) ||
+                    student['Father Name']?.toLowerCase().includes(nameFilter);
+                const matchesYear = !yearFilter || student['Year'] === yearFilter;
+                return matchesName && matchesYear;
+            });
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4'); // Portrait for 8 columns
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Students Report`, 105, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            const filters = `Year: ${yearFilter || 'All'} | Records: ${filtered.length} | Date: ${getCurrentDate()}`;
+            doc.text(filters, 105, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Category', 'Status'];
+            const colWidths = [12, 45, 45, 18, 22, 28, 18, 18];
+            
+            createPDFTable(doc, headers, colWidths, 30, filtered.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                student['In/Out'] || ''
+            ]), `Total Students: ${filtered.length}`);
+
+            doc.save(`${appState.currentCourse}_Students_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseAcademicCSV() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...courseData.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    `"${student['Adm'] || ''}"`,
+                    `"${student['Adm Cat'] || ''}"`,
+                    `"${student['Date'] || ''}"`,
+                    `"${student['Rpt'] || ''}"`
+                ].join(',')),
+                `"Total Students: ${courseData.length}","","","","","","","","","",""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Academic_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseAcademicPDF() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for 11 columns
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Academic Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 'Adm', 'Adm Cat', 'Date', 'Rpt'];
+            const colWidths = [10, 45, 45, 15, 18, 22, 12, 12, 18, 18, 12];
+            
+            createPDFTable(doc, headers, colWidths, 30, courseData.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                student['Adm'] || '',
+                student['Adm Cat'] || '',
+                student['Date'] || '',
+                student['Rpt'] || ''
+            ]), `Total Students: ${courseData.length}`);
+
+            doc.save(`${appState.currentCourse}_Academic_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseFeesCSV() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const totals = calculateFeeTotals(courseData);
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
+                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
+                           'Total Alloted', 'Total Paid', 'Total Due'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...courseData.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    student['SMP Alloted'] || 0,
+                    student['SVK Alloted'] || 0,
+                    student['SMP Paid'] || 0,
+                    student['SVK Paid'] || 0,
+                    student['SMP Due'] || 0,
+                    student['SVK Due'] || 0,
+                    student['Total Alloted'] || 0,
+                    student['Total Paid'] || 0,
+                    student['Total Dues'] || 0
+                ].join(',')),
+                `"Total (${courseData.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue}`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Fees_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseFeesPDF() {
+            const courseData = appState.currentCourse === 'ALL' ? 
+                appState.consolidatedStudents : 
+                appState.consolidatedStudents.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for 16 columns
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Fees Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${courseData.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D'];
+            const colWidths = [10, 32, 32, 10, 14, 16, 10, 14, 14, 14, 14, 14, 14, 16, 16, 16];
+            
+            const tableData = courseData.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                formatCurrency(student['SMP Alloted'] || 0),
+                formatCurrency(student['SVK Alloted'] || 0),
+                formatCurrency(student['SMP Paid'] || 0),
+                formatCurrency(student['SVK Paid'] || 0),
+                formatCurrency(student['SMP Due'] || 0),
+                formatCurrency(student['SVK Due'] || 0),
+                formatCurrency(student['Total Alloted'] || 0),
+                formatCurrency(student['Total Paid'] || 0),
+                formatCurrency(student['Total Dues'] || 0)
+            ]);
+
+            const totals = calculateFeeTotals(courseData);
+            const totalRow = [`Total (${courseData.length})`, '', '', '', '', '', '', 
+                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
+                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
+                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
+                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
+                           formatCurrency(totals.totalDue)];
+
+            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
+            doc.save(`${appState.currentCourse}_Fees_${getCurrentDate()}.pdf`);
+        }
+
+        function exportCourseDuesCSV() {
+            const dueStudents = appState.currentCourse === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
+
+            const totals = calculateFeeTotals(dueStudents);
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All_Courses' : appState.currentCourse;
+            const headers = ['S.No', 'Student Name', 'Father Name', 'Year', 'Course', 'Reg No', 'Cat', 
+                           'SMP Alloted', 'SVK Alloted', 'SMP Paid', 'SVK Paid', 'SMP Due', 'SVK Due', 
+                           'Total Alloted', 'Total Paid', 'Total Due', 'Payment Records'];
+            
+            const csvContent = [
+                headers.join(','),
+                ...dueStudents.map((student, index) => [
+                    index + 1,
+                    `"${(student['Student Name'] || '').replace(/"/g, '""')}"`,
+                    `"${(student['Father Name'] || '').replace(/"/g, '""')}"`,
+                    `"${student['Year'] || ''}"`,
+                    `"${student['Course'] || ''}"`,
+                    `"${student['Reg No'] || ''}"`,
+                    `"${student['Cat'] || ''}"`,
+                    student['SMP Alloted'] || 0,
+                    student['SVK Alloted'] || 0,
+                    student['SMP Paid'] || 0,
+                    student['SVK Paid'] || 0,
+                    student['SMP Due'] || 0,
+                    student['SVK Due'] || 0,
+                    student['Total Alloted'] || 0,
+                    student['Total Paid'] || 0,
+                    student['Total Dues'] || 0,
+                    student['Payment Records'] || 1
+                ].join(',')),
+                `"Total (${dueStudents.length} Students)","","","","","","",${totals.smpAlloted},${totals.svkAlloted},${totals.smpPaid},${totals.svkPaid},${totals.smpDue},${totals.svkDue},${totals.totalAlloted},${totals.totalPaid},${totals.totalDue},""`
+            ].join('\n');
+            
+            downloadCSV(csvContent, `${courseTitle}_Dues_${getCurrentDate()}.csv`);
+        }
+
+        function exportCourseDuesPDF() {
+            const dueStudents = appState.currentCourse === 'ALL' ? 
+                appState.duesData : 
+                appState.duesData.filter(s => s['Course'] === appState.currentCourse);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape for 17 columns
+            const courseTitle = appState.currentCourse === 'ALL' ? 'All Courses' : `${COURSES[appState.currentCourse]?.name} (${appState.currentCourse})`;
+            
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(`${courseTitle} - Dues Report`, 148, 15, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Records: ${dueStudents.length} | Date: ${getCurrentDate()}`, 148, 22, { align: 'center' });
+
+            const headers = ['S.No', 'Student Name', 'F.Name', 'Yr', 'Course', 'Reg No', 'Cat', 'SMP A', 'SVK A', 'SMP P', 'SVK P', 'SMP D', 'SVK D', 'Tot A', 'Tot P', 'Tot D', 'Rec'];
+            const colWidths = [8, 28, 28, 8, 12, 14, 8, 13, 13, 13, 13, 13, 13, 15, 15, 15, 8];
+            
+            const tableData = dueStudents.map((student, index) => [
+                (index + 1).toString(),
+                student['Student Name'] || '',
+                student['Father Name'] || '',
+                student['Year'] || '',
+                student['Course'] || '',
+                student['Reg No'] || '',
+                student['Cat'] || '',
+                formatCurrency(student['SMP Alloted'] || 0),
+                formatCurrency(student['SVK Alloted'] || 0),
+                formatCurrency(student['SMP Paid'] || 0),
+                formatCurrency(student['SVK Paid'] || 0),
+                formatCurrency(student['SMP Due'] || 0),
+                formatCurrency(student['SVK Due'] || 0),
+                formatCurrency(student['Total Alloted'] || 0),
+                formatCurrency(student['Total Paid'] || 0),
+                formatCurrency(student['Total Dues'] || 0),
+                (student['Payment Records'] || 1).toString()
+            ]);
+
+            const totals = calculateFeeTotals(dueStudents);
+            const totalRow = [`Tot (${dueStudents.length})`, '', '', '', '', '', '', 
+                           formatCurrency(totals.smpAlloted), formatCurrency(totals.svkAlloted),
+                           formatCurrency(totals.smpPaid), formatCurrency(totals.svkPaid),
+                           formatCurrency(totals.smpDue), formatCurrency(totals.svkDue),
+                           formatCurrency(totals.totalAlloted), formatCurrency(totals.totalPaid),
+                           formatCurrency(totals.totalDue), '-'];
+
+            createPDFTable(doc, headers, colWidths, 30, tableData, totalRow);
+            doc.save(`${appState.currentCourse}_Dues_${getCurrentDate()}.pdf`);
         }
 
         function exportCourseData(reportType) {
@@ -2614,6 +3028,9 @@
         function createPDFTable(doc, headers, colWidths, startY, data, totalRow) {
             let currentY = startY;
             const pageHeight = 200; // Leave margin for footer
+            
+            // Determine orientation based on number of columns
+            const isPortrait = headers.length < 9;
             
             // Table header
             doc.setFontSize(8);
@@ -2712,7 +3129,9 @@
                 doc.setPage(i);
                 doc.setFontSize(8);
                 doc.setFont(undefined, 'normal');
-                doc.text(`Page ${i} of ${pageCount} | Generated: ${getCurrentDate()} | SMP Admin System`, 148, 205, { align: 'center' });
+                const footerY = isPortrait ? 285 : 205;
+                const centerX = isPortrait ? 105 : 148;
+                doc.text(`Page ${i} of ${pageCount} | Generated: ${getCurrentDate()} | SMP Admin System`, centerX, footerY, { align: 'center' });
             }
         }
 
