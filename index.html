@@ -553,27 +553,7 @@
             font-weight: 600;
         }
 
-        /* Enhanced scroll indicator for all screens */
-        .table-container::after {
-            content: '← Scroll horizontally for more data →';
-            position: sticky;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-secondary);
-            text-align: center;
-            padding: 0.5rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border);
-            z-index: 5;
-            opacity: 0.8;
-        }
 
-        /* Hide scroll indicator when table is fully visible */
-        .table-container.no-scroll::after {
-            display: none;
-        }
 
         /* Theme Toggle */
         .theme-toggle {
